@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráfica Juliart | Sua Gráfica Rápida e Personalizados</title>
+    
+    <!-- Swiper CSS (para os carrosséis) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <!-- GLightbox CSS (para o zoom nas imagens) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" />
+    <!-- CSS Próprio -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Font Awesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- 1. TOPO E NAVEGAÇÃO -->
+    <header class="header">
+        <div class="logo-container">
+            <h1 class="logo-text">Gráfica <span>Juliart</span></h1>
+        </div>
+        <nav class="navbar">
+            <ul>
+                <li><a href="#inicio">Início</a></li>
+                <li><a href="javascript:void(0)" onclick="toggleModal('modal-sobre-nos')">Sobre Nós</a></li>
+                <li><a href="#servicos">Serviços</a></li>
+                <li><a href="#contatos">Contatos</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- 2. CARROSSEL AUTOMÁTICO (DESTAQUES DO BANCO DE DADOS) -->
+    <section id="inicio" class="section-banner">
+        <div class="swiper banner-swiper">
+            <!-- ID adicionado para receber os produtos com destaque = true via JS -->
+            <div class="swiper-wrapper" id="banner-destaques-wrapper">
+                <div class="swiper-slide banner-slide bg-1">
+                    <div class="banner-content">
+                        <h2>Destaques da Semana</h2>
+                        <p>Copos e Canecas personalizadas com acabamento impecável!</p>
+                    </div>
+                </div>
+                <div class="swiper-slide banner-slide bg-2">
+                    <div class="banner-content">
+                        <h2>Impressões Rápidas & Panfletos</h2>
+                        <p>Divulgue seu negócio com a melhor qualidade gráfica.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="swiper-pagination"></div>
+        </div>
+    </section>
+
+    <!-- 3. ANÚNCIO / TABELA DE PREÇOS -->
+    <section class="price-banner">
+        <div class="container price-container">
+            <h3>Confira nossos valores e condições especiais</h3>
+            <p>Acesse nossa tabela completa de preços de serviços rápidos, cópias e papelaria.</p>
+            <button class="btn-pink" id="btn-abrir-precos">
+                <i class="fa-solid fa-list-check"></i> Ver Tabela de Preços
+            </button>
+        </div>
+    </section>
+
+    <!-- 4. CARROSSEL MANUAL: CANECAS PERSONALIZADAS -->
+    <section class="section-products container">
+        <h2 class="section-title">Canecas Personalizadas</h2>
+        <div class="swiper-container-wrapper">
+            <div class="swiper canecas-swiper">
+                <div class="swiper-wrapper" id="grid-canecas">
+                    <!-- Os produtos serão inseridos dinamicamente via JS -->
+                </div>
+                <div class="swiper-button-next canecas-next"></div>
+                <div class="swiper-button-prev canecas-prev"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. CARROSSEL MANUAL: CAMISAS PERSONALIZADAS -->
+    <section class="section-products container">
+        <h2 class="section-title">Camisas Personalizadas</h2>
+        <div class="swiper-container-wrapper">
+            <div class="swiper camisas-swiper">
+                <div class="swiper-wrapper" id="grid-camisas">
+                    <!-- Os produtos serão inseridos dinamicamente via JS -->
+                </div>
+                <div class="swiper-button-next camisas-next"></div>
+                <div class="swiper-button-prev camisas-prev"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. CARROSSEL MANUAL: ITENS PERSONALIZADOS -->
+    <section class="section-products container">
+        <h2 class="section-title">Itens Personalizados</h2>
+        <div class="swiper-container-wrapper">
+            <div class="swiper itens-swiper">
+                <div class="swiper-wrapper" id="grid-itens">
+                    <!-- Os produtos serão inseridos dinamicamente via JS -->
+                </div>
+                <div class="swiper-button-next itens-next"></div>
+                <div class="swiper-button-prev itens-prev"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. GRADE DE SERVIÇOS E IMPRESSÕES -->
+    <section id="servicos" class="section-services container">
+        <h2 class="section-title">Nossos Serviços Gráficos</h2>
+        <div class="services-grid">
+            <div class="service-card">
+                <i class="fa-solid fa-print"></i>
+                <h3>Impressões e Cópias</h3>
+                <p>Documentos P&B e coloridos em alta velocidade e definição.</p>
+            </div>
+            <div class="service-card">
+                <i class="fa-solid fa-id-card"></i>
+                <h3>Cartões de Visita & Panfletos</h3>
+                <p>Divulgação profissional para a sua empresa ou evento.</p>
+            </div>
+            <div class="service-card">
+                <i class="fa-solid fa-cake-candles"></i>
+                <h3>Itens para Aniversários</h3>
+                <p>Topos de bolo, convites, caixas personalizadas e festas.</p>
+            </div>
+            <div class="service-card">
+                <i class="fa-solid fa-key"></i>
+                <h3>Lembrancinhas e Brindes</h3>
+                <p>Chaveiros, ímãs de geladeira e mimos para clientes.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODAL SOBRE NÓS -->
+    <div id="modal-sobre-nos" class="modal">
+        <div class="modal-content text-center">
+            <span class="close-modal" onclick="toggleModal('modal-sobre-nos')">&times;</span>
+            
+            <div class="modal-header-about">
+                <i class="fa-solid fa-print modal-icon-logo"></i>
+                <h2>Gráfica <span>Juliart</span></h2>
+            </div>
+
+            <div class="modal-body-about">
+                <p>
+                    Na <strong>Gráfica Juliart</strong>, transformamos ideias em materiais impressos de altíssima qualidade. 
+                    Especializados em papelaria personalizada, impressões rápidas, camisas e canecas exclusivas, buscamos sempre entregar excelência, cores vibrantes e atenção aos detalhes em cada projeto.
+                </p>
+                <p>
+                    Seja para promover o seu negócio ou criar presentes inesquecíveis para quem você ama, conte com a nossa dedicação e paixão pelo que fazemos!
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DA TABELA DE PREÇOS -->
+    <div id="modal-precos" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="btn-fechar-precos">&times;</span>
+            <h3>Tabela de Preços - Gráfica Juliart</h3>
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th>Serviço</th>
+                        <th>Quantidade</th>
+                        <th>Valor (R$)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Impressão Preto e Branco (A4)</td><td>1 página<br>Acima de 10</td><td>R$ 1,00<br>R$ 0,70</td></tr>
+                    <tr><td>Impressão Colorida (A4)</td><td>1 página<br>Acima de 10</td><td>R$ 1,50<br>R$ 1,20</td></tr>
+                    <tr><td>Xerox | Cópia P&B (A4)</td><td>1 página<br>Acima de 10</td><td>R$ 0,30<br>R$ 0,25</td></tr>
+                    <tr><td>Xerox | Cópia Colorida (A4)</td><td>1 página<br>Acima de 10</td><td>R$ 0,50<br>R$ 0,45</td></tr>
+                    <tr><td>Bottons Personalizados | Acrílico</td><td>20 un.</td><td>R$ 70,00</td></tr>
+                    <tr><td>Chaveiros Personalizados</td><td>Unitário</td><td>R$ 5,00</td></tr>
+                    <tr><td>Panfletos 10x14cm</td><td>1000 un.</td><td>R$ 120,00</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- BOTÃO FLUTUANTE OU DE DESTAQUE PARA CRIAR PERSONALIZADO -->
+    <div class="custom-cta-wrapper container" style="text-align: center; margin: 40px auto;">
+        <button class="btn-pink btn-create-custom" onclick="toggleModal('modal-custom')">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Monte Seu Personalizado do Seu Jeito
+        </button>
+    </div>
+
+    <!-- MODAL: MONTE SEU PERSONALIZADO -->
+    <div id="modal-custom" class="modal">
+        <div class="modal-content modal-custom-content">
+            <span class="close-modal" onclick="toggleModal('modal-custom')">&times;</span>
+            
+            <h2><i class="fa-solid fa-wand-magic-sparkles"></i> Monte Seu Personalizado</h2>
+            <p class="modal-subtitle">Preencha os detalhes abaixo e receba um orçamento prévio no WhatsApp!</p>
+
+            <form id="form-custom-item">
+                <!-- Passo 1: Seleção do Tipo de Produto -->
+                <div class="form-group">
+                    <label for="custom-tipo"><strong>1. O que você deseja personalizar?</strong></label>
+                    <select id="custom-tipo" class="form-control" required>
+                        <option value="" disabled selected>Selecione um produto...</option>
+                        <option value="Camisa">Camisa / Camiseta</option>
+                        <option value="Caneca">Caneca Personalizada</option>
+                        <option value="Topo de Bolo">Topo de Bolo</option>
+                        <option value="Comunicação Visual">Comunicação Visual (Banner, Placa, Faixa)</option>
+                        <option value="Lembrancinha de Evento">Lembrancinha de Evento (Aniversário/Casamento/Outros)</option>
+                        <option value="Outro">Outro Item (Especifique nas observações)</option>
+                    </select>
+                </div>
+
+                <!-- Passo 2: Quantidade (Sempre visível) -->
+                <div class="form-group">
+                    <label for="custom-qtd"><strong>2. Quantidade:</strong></label>
+                    <input type="number" id="custom-qtd" class="form-control" min="1" value="1" required>
+                </div>
+
+                <!-- Passo 3: CAMPOS ESPECÍFICOS (Preenchidos dinamicamente pelo JS conforme o produto) -->
+                <div id="campos-especificos" class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <!-- O JavaScript vai injetar aqui os campos de Tamanho, Cor, Material, Tecido, etc. -->
+                </div>
+
+                <!-- Passo 4: Descrição, Tema e Ideias -->
+                <div class="form-group">
+                    <label for="custom-detalhes"><strong>3. Detalhes da Arte / Tema:</strong></label>
+                    <textarea id="custom-detalhes" class="form-control" rows="3" placeholder="Descreva o tema, nomes, datas, frases ou idéias de cores que quer incluir..." required></textarea>
+                </div>
+
+                <!-- Passo 5: Nome do Cliente -->
+                <div class="form-group">
+                    <label for="custom-nome"><strong>4. Seu Nome:</strong></label>
+                    <input type="text" id="custom-nome" class="form-control" placeholder="Como podemos te chamar?" required>
+                </div>
+
+                <button type="submit" class="btn-pink btn-submit-custom" style="width: 100%; margin-top: 15px;">
+                    <i class="fa-brands fa-whatsapp"></i> Solicitar Orçamento via WhatsApp
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE DETALHES DO PRODUTO -->
+    <div id="modal-produto-detalhes" class="modal">
+        <div class="modal-content modal-produto-content">
+            <span class="close-modal" onclick="toggleModal('modal-produto-detalhes')">&times;</span>
+            
+            <div class="produto-detalhes-grid">
+                <div class="produto-detalhes-img">
+                    <img id="modal-prod-img" src="" alt="Produto">
+                </div>
+                <div class="produto-detalhes-info">
+                    <h2 id="modal-prod-nome">Nome do Produto</h2>
+                    <span id="modal-prod-preco" class="price">R$ 0,00</span>
+                    
+                    <p id="modal-prod-desc">Descrição detalhada do produto e especificações técnicas.</p>
+                    
+                    <div class="modal-prod-acoes">
+                        <button id="modal-prod-btn-cart" class="btn-pink" style="width: 100%;">
+                            <i class="fa-solid fa-cart-shopping"></i> Adicionar ao Carrinho
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botão Flutuante do Carrinho -->
+<div id="carrinho-flutuante" onclick="toggleModal('modal-carrinho')">
+    <i class="fa-solid fa-cart-shopping"></i>
+    <span id="carrinho-qtd-badge">0</span>
+</div>
+
+<!-- Modal Detalhado do Carrinho -->
+<div id="modal-carrinho" class="modal">
+    <div class="modal-content" style="max-width: 500px; width: 90%;">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-basket-shopping"></i> Seu Carrinho</h3>
+            <span class="close-btn" onclick="toggleModal('modal-carrinho')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <!-- Lista Dinâmica de Produtos -->
+            <ul id="carrinho-lista-itens" class="carrinho-lista">
+                <!-- Preenchido via JavaScript -->
+            </ul>
+
+            <!-- Resumo e Valor Total -->
+            <div class="carrinho-resumo">
+                <span>Total Estimado:</span>
+                <strong id="carrinho-valor-total">R$ 0,00</strong>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="limparCarrinho()">Limpar Carrinho</button>
+            <button class="btn-pink" onclick="finalizarPedidoWhatsApp()">
+                <i class="fa-brands fa-whatsapp"></i> Finalizar no WhatsApp
+            </button>
+        </div>
+    </div>
+</div>
+
+    <!-- RODAPÉ -->
+    <footer id="contatos" class="footer">
+        <p>&copy; 2026 Gráfica Juliart. Todos os direitos reservados.</p>
+        <p>Atendimento via WhatsApp e Redes Sociais</p>
+    </footer>
+
+    <!-- Scripts de Bibliotecas -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mcstudios/glightbox/dist/js/glightbox.min.js"></script>
+    
+    <!-- Scripts Próprios -->
+    <script src="js/carousel.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

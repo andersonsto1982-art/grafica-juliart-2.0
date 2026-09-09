@@ -1,0 +1,791 @@
+/* ==========================================================================
+   1. VARIÁVEIS DE CORES E CONFIGURAÇÃO GERAL
+   ========================================================================== */
+:root {
+    --cor-preto: #111111;
+    --cor-preto-suave: #1e1e24;
+    --cor-azul-escuro: #0f172a;
+    --cor-azul: #0d6efd;
+    --cor-azul-hover: #0b5ed7;
+    --cor-rosa: #ff2a85;
+    --cor-rosa-hover: #d81b6f;
+    --cor-branco: #ffffff;
+    --cor-cinza-claro: #f8fafc;
+    --cor-cinza-borda: #e2e8f0;
+    --fonte-principal: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--fonte-principal);
+    background-color: var(--cor-cinza-claro);
+    color: var(--cor-preto);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ==========================================================================
+   2. CABEÇALHO E MENU DE NAVEGAÇÃO
+   ========================================================================== */
+.header {
+    background-color: var(--cor-preto);
+    border-bottom: 4px solid var(--cor-rosa);
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.logo-container {
+    padding: 20px 10px 10px 10px;
+}
+
+.logo-text {
+    font-size: 2.2rem;
+    color: var(--cor-branco);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 800;
+}
+
+.logo-text span {
+    color: var(--cor-rosa);
+    text-shadow: 0 0 10px rgba(255, 42, 133, 0.5);
+}
+
+.logo-img {
+    max-height: 70px;
+    width: auto;
+}
+
+/* Menu de Navegação */
+.navbar {
+    background-color: var(--cor-azul-escuro);
+    padding: 12px 0;
+}
+
+.navbar ul {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.navbar a {
+    color: var(--cor-branco);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.navbar a:hover {
+    background-color: var(--cor-rosa);
+    color: var(--cor-branco);
+    box-shadow: 0 2px 10px rgba(255, 42, 133, 0.4);
+}
+
+/* ==========================================================================
+   3. CARROSSEL AUTOMÁTICO (BANNER DE STAQUES)
+   ========================================================================== */
+.section-banner {
+    width: 100%;
+    height: 380px;
+    background-color: var(--cor-preto-suave);
+    position: relative;
+    overflow: hidden;
+}
+
+.banner-swiper {
+    width: 100%;
+    height: 100%;
+}
+
+.banner-slide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--cor-branco);
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.banner-slide::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(255, 42, 133, 0.4));
+}
+
+.banner-slide.bg-1 {
+    background-image: url('https://images.unsplash.com/photo-1562564055-71e051d33c19?auto=format&fit=crop&w=1350&q=80');
+}
+
+.banner-slide.bg-2 {
+    background-image: url('https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1350&q=80');
+}
+
+.banner-content {
+    position: relative;
+    z-index: 2;
+    padding: 20px;
+    max-width: 800px;
+}
+
+.banner-content h2 {
+    font-size: 2.8rem;
+    color: var(--cor-branco);
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+}
+
+.banner-content p {
+    font-size: 1.3rem;
+    color: #f1f5f9;
+}
+
+/* Indicadores do Carrossel */
+.banner-swiper .swiper-pagination-bullet-active {
+    background-color: var(--cor-rosa) !important;
+    width: 25px;
+    border-radius: 5px;
+}
+
+/* ==========================================================================
+   4. ANÚNCIO E TABELA DE PREÇOS (BANNER CTA)
+   ========================================================================== */
+.price-banner {
+    background: linear-gradient(90deg, var(--cor-azul-escuro) 0%, var(--cor-preto) 100%);
+    color: var(--cor-branco);
+    padding: 35px 20px;
+    text-align: center;
+    border-top: 2px solid var(--cor-rosa);
+    border-bottom: 2px solid var(--cor-rosa);
+    margin-bottom: 40px;
+}
+
+.price-container h3 {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+}
+
+.price-container p {
+    font-size: 1.1rem;
+    color: #cbd5e1;
+    margin-bottom: 20px;
+}
+
+.btn-pink {
+    background-color: var(--cor-rosa);
+    color: var(--cor-branco);
+    border: none;
+    padding: 14px 28px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 42, 133, 0.4);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-pink:hover {
+    background-color: var(--cor-rosa-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 42, 133, 0.6);
+}
+
+/* ==========================================================================
+   5. SEÇÃO DE PRODUTOS E CARROSSÉIS MANUAIS
+   ========================================================================== */
+.section-products {
+    margin-bottom: 50px;
+}
+
+.section-title {
+    font-size: 1.8rem;
+    color: var(--cor-azul-escuro);
+    margin-bottom: 25px;
+    padding-left: 15px;
+    border-left: 5px solid var(--cor-rosa);
+    text-transform: uppercase;
+}
+
+.swiper-container-wrapper {
+    position: relative;
+    padding: 10px 40px;
+}
+
+/* Card do Produto */
+.product-card {
+    background-color: var(--cor-branco);
+    border-radius: 12px;
+    border: 1px solid var(--cor-cinza-borda);
+    padding: 18px;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.product-card:hover {
+    border-color: var(--cor-rosa);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(255, 42, 133, 0.2);
+}
+
+.product-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.product-card img:hover {
+    transform: scale(1.03);
+}
+
+.product-card h4 {
+    font-size: 1.1rem;
+    color: var(--cor-preto);
+    margin-bottom: 8px;
+}
+
+.product-card .price {
+    display: block;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--cor-azul);
+    margin-bottom: 12px;
+}
+
+.btn-cart {
+    width: 100%;
+    background-color: var(--cor-preto);
+    color: var(--cor-branco);
+    border: 1px solid var(--cor-rosa);
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-cart:hover {
+    background-color: var(--cor-rosa);
+    color: var(--cor-branco);
+}
+
+/* Setas dos Carrosséis Manuais */
+.swiper-button-next, .swiper-button-prev {
+    color: var(--cor-rosa) !important;
+    font-weight: bold;
+}
+
+.swiper-button-next::after, .swiper-button-prev::after {
+    font-size: 1.8rem !important;
+}
+
+/* ==========================================================================
+   6. GRADE DE SERVIÇOS
+   ========================================================================== */
+.section-services {
+    margin-bottom: 60px;
+}
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.service-card {
+    background-color: var(--cor-branco);
+    padding: 25px;
+    border-radius: 12px;
+    text-align: center;
+    border-top: 4px solid var(--cor-azul);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.service-card:hover {
+    border-top-color: var(--cor-rosa);
+    transform: translateY(-5px);
+}
+
+.service-card i {
+    font-size: 2.5rem;
+    color: var(--cor-rosa);
+    margin-bottom: 15px;
+}
+
+.service-card h3 {
+    font-size: 1.2rem;
+    color: var(--cor-preto);
+    margin-bottom: 10px;
+}
+
+.service-card p {
+    font-size: 0.95rem;
+    color: #64748b;
+}
+
+/* ==========================================================================
+   7. MODAL DA TABELA DE PREÇOS
+   ========================================================================== */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background-color: var(--cor-branco);
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    position: relative;
+    border-top: 6px solid var(--cor-rosa);
+    animation: modalFade 0.3s ease;
+}
+
+@keyframes modalFade {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.close-btn {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #64748b;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    color: var(--cor-rosa);
+}
+
+.price-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.price-table th, .price-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--cor-cinza-borda);
+}
+
+.price-table th {
+    background-color: var(--cor-azul-escuro);
+    color: var(--cor-branco);
+}
+
+.price-table tr:nth-child(even) {
+    background-color: #f1f5f9;
+}
+
+/* ==========================================================================
+   8. RODAPÉ
+   ========================================================================== */
+.footer {
+    background-color: var(--cor-preto);
+    color: var(--cor-branco);
+    text-align: center;
+    padding: 25px 20px;
+    border-top: 4px solid var(--cor-rosa);
+}
+
+.footer p {
+    font-size: 0.95rem;
+    color: #94a3b8;
+}
+
+/* Botão de Destaque */
+.btn-create-custom {
+    padding: 14px 28px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.btn-create-custom:hover {
+    transform: scale(1.03);
+}
+
+/* Modal Form Styles */
+.modal-custom-content {
+    max-width: 550px;
+    padding: 25px;
+    border-radius: 12px;
+}
+
+.modal-subtitle {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    outline: none;
+}
+
+.form-control:focus {
+    border-color: #e91e63; /* Ajuste para a cor rosa/principal da sua marca */
+}
+
+/* Botão do Menu */
+.nav-link-btn {
+    background: transparent;
+    border: none;
+    color: #333;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 16px;
+    transition: color 0.3s ease;
+}
+
+.nav-link-btn:hover {
+    color: #e83e8c; /* Cor rosa/tema do site */
+}
+
+/* Modal Estilizado */
+.text-center { text-align: center; }
+
+.modal-header-about {
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 15px;
+}
+
+.modal-header-about h2 {
+    font-size: 1.8rem;
+    color: #333;
+    margin-top: 10px;
+}
+
+.modal-header-about h2 span {
+    color: #e83e8c;
+}
+
+.modal-icon-logo {
+    font-size: 2.5rem;
+    color: #e83e8c;
+}
+
+.modal-body-about p {
+    font-size: 1rem;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+/* ==========================================================================
+   9. CAMPOS DINÂMICOS E AJUSTES DO FORMULÁRIO MONTE SEU PERSONALIZADO
+   ========================================================================== */
+
+/* Container dos campos específicos inseridos dinamicamente pelo JS */
+#campos-especificos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    background-color: var(--cor-cinza-claro);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px dashed var(--cor-rosa);
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Animação de entrada dos novos campos */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Sobrescreve o foco para usar a cor rosa definida nas suas variáveis */
+.form-control:focus {
+    border-color: var(--cor-rosa);
+    box-shadow: 0 0 0 3px rgba(255, 42, 133, 0.2);
+}
+
+/* Customização dos selects para alinhar com o design moderno */
+select.form-control {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%33111111' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 36px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 90px;
+}
+
+/* Fechar modal estilizado (Suporte a .close-modal) */
+.close-modal {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #64748b;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.close-modal:hover {
+    color: var(--cor-rosa);
+}
+
+/* Responsividade para telas de celulares */
+@media (max-width: 600px) {
+    #campos-especificos {
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    #campos-especificos .form-group {
+        width: 100% !important;
+        min-width: 100% !important;
+    }
+}
+
+/* ==========================================================================
+   10. MODAL DE DETALHES DO PRODUTO
+   ========================================================================== */
+.modal-produto-content {
+    max-width: 750px;
+    width: 90%;
+    padding: 30px;
+}
+
+.produto-detalhes-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.produto-detalhes-img img {
+    width: 100%;
+    max-height: 320px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid var(--cor-cinza-borda);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.produto-detalhes-info h2 {
+    font-size: 1.6rem;
+    color: var(--cor-preto);
+    margin-bottom: 10px;
+}
+
+.produto-detalhes-info .price {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--cor-rosa);
+    display: block;
+    margin-bottom: 15px;
+}
+
+.produto-detalhes-info p {
+    font-size: 0.95rem;
+    color: #4a5568;
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+
+/* Responsividade para Celulares */
+@media (max-width: 650px) {
+    .produto-detalhes-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .produto-detalhes-img img {
+        max-height: 220px;
+    }
+}
+
+/* Botão Flutuante do Carrinho */
+#carrinho-flutuante {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 60px;
+    height: 60px;
+    background-color: #e91e63; /* Cor temática rosa/pink */
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    z-index: 999;
+    transition: transform 0.2s ease, background-color 0.2s;
+}
+
+#carrinho-flutuante:hover {
+    transform: scale(1.08);
+    background-color: #d81b60;
+}
+
+/* Badge com a Quantidade de Itens */
+#carrinho-qtd-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #25d366; /* Verde destaque */
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: bold;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid #ffffff;
+}
+
+/* Estilização da Lista no Modal */
+.carrinho-lista {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.carrinho-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.carrinho-item-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.carrinho-item-nome {
+    font-weight: bold;
+    color: #333;
+}
+
+.carrinho-item-preco {
+    font-size: 14px;
+    color: #666;
+}
+
+.btn-remover-item {
+    background: none;
+    border: none;
+    color: #ff5252;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 5px;
+}
+
+.btn-remover-item:hover {
+    color: #d32f2f;
+}
+
+.carrinho-resumo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+    padding-top: 15px;
+    margin-top: 15px;
+    border-top: 2px dashed #ddd;
+}
+
+.carrinho-vazio-msg {
+    text-align: center;
+    color: #888;
+    padding: 20px 0;
+}

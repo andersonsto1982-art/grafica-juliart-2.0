@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Administrador | Gráfica Juliart</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .admin-container { max-width: 800px; margin: 40px auto; padding: 25px; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        .admin-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .admin-table th, .admin-table td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
+        .btn-delete { background: #dc3545; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-delete:hover { background: #c82333; }
+        
+        /* Estilos do Botão de Editar e Ações */
+        .admin-actions { display: flex; gap: 8px; align-items: center; }
+        .btn-edit { background: #ffc107; color: #212529; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-edit:hover { background: #e0a800; }
+
+        /* Estilos Globais do Modal de Edição */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background-color: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 550px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .close-modal { position: absolute; right: 20px; top: 15px; font-size: 24px; font-weight: bold; cursor: pointer; color: #aaa; }
+        .close-modal:hover { color: #000; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo-container">
+            <h1 class="logo-text">Painel <span>Administrativo</span></h1>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- TELA DE LOGIN -->
+        <div id="login-section" class="admin-container">
+            <h2><i class="fa-solid fa-lock"></i> Login do Administrador</h2>
+            <form id="form-login">
+                <div class="form-group">
+                    <label>E-mail:</label>
+                    <input type="email" id="login-email" required placeholder="admin@juliart.com">
+                </div>
+                <div class="form-group">
+                    <label>Senha:</label>
+                    <input type="password" id="login-senha" required placeholder="admin123">
+                </div>
+                <button type="submit" class="btn-pink" style="width: 100%;">Entrar no Painel</button>
+            </form>
+        </div>
+
+        <!-- PAINEL DE CADASTRO (ESCONDIDO ATÉ LOGAR) -->
+        <div id="dashboard-section" class="admin-container" style="display: none;">
+            <h2><i class="fa-solid fa-box-open"></i> Cadastrar Novo Item</h2>
+            <form id="form-produto" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>Nome do Produto:</label>
+                    <input type="text" name="nome" required placeholder="Ex: Caneca Porcelana Personalizada">
+                </div>
+                <div class="form-group">
+                    <label>Preço (R$):</label>
+                    <input type="number" step="0.01" name="preco" required placeholder="29.90">
+                </div>
+                <div class="form-group">
+                    <label>Categoria:</label>
+                    <select name="categoria_id" required>
+                        <option value="1">Canecas</option>
+                        <option value="2">Camisas</option>
+                        <option value="3">Papelaria / Cartões</option>
+                        <option value="4">Gráfica Rápida</option>
+                        <option value="5">Personalizados para Eventos</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Descrição / Especificações:</label>
+                    <textarea name="descricao" rows="3" placeholder="Ex: Porcelana 325ml, resistente ao micro-ondas"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Imagem do Produto:</label>
+                    <input type="file" name="imagem" accept="image/*" required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="destaque" value="true"> Destacar no Carrossel Principal
+                    </label>
+                </div>
+                <button type="submit" class="btn-pink" style="width: 100%;">Salvar Produto</button>
+            </form>
+
+            <h2 style="margin-top: 40px;"><i class="fa-solid fa-list"></i> Produtos Cadastrados</h2>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Preço</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-admin-produtos">
+                    <!-- Preenchido via JS (com botões de Editar e Excluir) -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- MODAL DE EDIÇÃO DE PRODUTO -->
+    <div id="modal-editar-produto" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="toggleModal('modal-editar-produto')">&times;</span>
+            <h2><i class="fa-solid fa-pen-to-square"></i> Editar Produto</h2>
+
+            <form id="form-editar-produto">
+                <input type="hidden" id="edit-prod-id">
+
+                <div class="form-group">
+                    <label for="edit-prod-nome">Nome do Produto:</label>
+                    <input type="text" id="edit-prod-nome" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-prod-preco">Preço (R$):</label>
+                    <input type="number" step="0.01" id="edit-prod-preco" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-prod-categoria">Categoria:</label>
+                    <select id="edit-prod-categoria" required>
+                        <option value="1">Canecas</option>
+                        <option value="2">Camisas</option>
+                        <option value="3">Papelaria / Cartões</option>
+                        <option value="4">Gráfica Rápida</option>
+                        <option value="5">Personalizados para Eventos</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-prod-descricao">Descrição:</label>
+                    <textarea id="edit-prod-descricao" rows="3"></textarea>
+                </div>
+
+                <button type="submit" class="btn-pink" style="width: 100%; margin-top: 15px;">
+                    <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
