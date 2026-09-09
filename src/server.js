@@ -3,6 +3,9 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'public')));
+
 const produtosRoutes = require('./routes/produtos.routes');
 const adminRoutes = require('./routes/admin.routes');
 
@@ -38,3 +41,5 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 Servidor da Gráfica Juliart rodando em http://localhost:${PORT}`);
 });
+
+module.exports = app;
