@@ -21,7 +21,8 @@ const upload = multer({ storage });
 router.post('/login', async (req, res) => {
     try {
         const { email, senha } = req.body;
-        const [rows] = await pool.query('SELECT * FROM usuarios WHERE email = ? AND senha = ?', [email, senha]);
+        // Ajustado para gj_usuarios
+        const [rows] = await pool.query('SELECT * FROM gj_usuarios WHERE email = ? AND senha = ?', [email, senha]);
 
         if (rows.length === 0) {
             return res.status(401).json({ erro: 'E-mail ou senha incorretos' });
@@ -42,8 +43,9 @@ router.post('/produtos', upload.single('imagem'), async (req, res) => {
         const isDestaque = destaque === 'true' || destaque === '1' || destaque === true ? 1 : 0;
         const catId = categoria_id && categoria_id !== '' ? categoria_id : null;
 
+        // Ajustado para gj_produtos
         const [result] = await pool.query(
-            'INSERT INTO produtos (nome, descricao, preco, imagem, categoria_id, destaque) VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO gj_produtos (nome, descricao, preco, imagem, categoria_id, destaque) VALUES (?, ?, ?, ?, ?, ?)',
             [nome, descricao || '', preco, imagemNome, catId, isDestaque]
         );
 
@@ -53,10 +55,11 @@ router.post('/produtos', upload.single('imagem'), async (req, res) => {
     }
 });
 
-// Buscar um Produto Específico por ID (Apoio para preencher o formulário no painel)
+// Buscar um Produto Específico por ID
 router.get('/produtos/:id', async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT * FROM produtos WHERE id = ?', [req.params.id]);
+        // Ajustado para gj_produtos
+        const [rows] = await pool.query('SELECT * FROM gj_produtos WHERE id = ?', [req.params.id]);
 
         if (rows.length === 0) {
             return res.status(404).json({ erro: 'Produto não encontrado' });
@@ -68,14 +71,14 @@ router.get('/produtos/:id', async (req, res) => {
     }
 });
 
-// Atualizar Produto Existente (Edição Corrigida)
+// Atualizar Produto Existente
 router.put('/produtos/:id', upload.single('imagem'), async (req, res) => {
     try {
         const { id } = req.params;
         const { nome, descricao, preco, categoria_id, destaque } = req.body;
 
-        // 1. Busca o produto atual para manter dados que não foram enviados na requisição
-        const [produtoExistente] = await pool.query('SELECT * FROM produtos WHERE id = ?', [id]);
+        // Ajustado para gj_produtos
+        const [produtoExistente] = await pool.query('SELECT * FROM gj_produtos WHERE id = ?', [id]);
 
         if (produtoExistente.length === 0) {
             return res.status(404).json({ erro: 'Produto não encontrado para edição' });
@@ -83,7 +86,6 @@ router.put('/produtos/:id', upload.single('imagem'), async (req, res) => {
 
         const produtoAtual = produtoExistente[0];
 
-        // 2. Define os valores tratados
         const novoNome = nome !== undefined && nome !== '' ? nome : produtoAtual.nome;
         const novaDescricao = descricao !== undefined ? descricao : produtoAtual.descricao;
         const novoPreco = preco !== undefined && preco !== '' ? preco : produtoAtual.preco;
@@ -96,9 +98,9 @@ router.put('/produtos/:id', upload.single('imagem'), async (req, res) => {
 
         const novaImagem = req.file ? req.file.filename : produtoAtual.imagem;
 
-        // 3. Executa o UPDATE no banco de dados
+        // Ajustado para gj_produtos
         await pool.query(
-            `UPDATE produtos 
+            `UPDATE gj_produtos 
              SET nome = ?, descricao = ?, preco = ?, imagem = ?, categoria_id = ?, destaque = ? 
              WHERE id = ?`,
             [novoNome, novaDescricao, novoPreco, novaImagem, novaCategoria, novoDestaque, id]
@@ -114,7 +116,8 @@ router.put('/produtos/:id', upload.single('imagem'), async (req, res) => {
 // Excluir Produto
 router.delete('/produtos/:id', async (req, res) => {
     try {
-        const [result] = await pool.query('DELETE FROM produtos WHERE id = ?', [req.params.id]);
+        // Ajustado para gj_produtos
+        const [result] = await pool.query('DELETE FROM gj_produtos WHERE id = ?', [req.params.id]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ erro: 'Produto não encontrado' });
