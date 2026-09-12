@@ -10,7 +10,7 @@ const upload = multer({
     limits: { fileSize: 5 * 1024 * 1024 } // limite de 5MB
 });
 
-// Login do Administrador
+// Login do Administrador (com Diagnóstico)
 router.post('/login', async (req, res) => {
     try {
         const { email, senha } = req.body;
@@ -19,27 +19,33 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ erro: 'E-mail e senha são obrigatórios' });
         }
 
-        // Busca o usuário apenas pelo e-mail para validar
-        const [rows] = await pool.query('SELECT * FROM gj_usuarios WHERE email = ?', [email]);
+        // Remove espaços acidentais nas pontas do texto
+        const emailLimpo = email.trim();
+        const senhaLimpa = senha.trim();
+
+        // Busca o usuário
+        const [rows] = await pool.query('SELECT * FROM gj_usuarios WHERE email = ?', [emailLimpo]);
 
         if (rows.length === 0) {
-            return res.status(401).json({ erro: 'E-mail ou senha incorretos' });
+            return res.status(401).json({ erro: `Usuário não encontrado com o e-mail: ${emailLimpo}` });
         }
 
         const usuario = rows[0];
 
-        // Comparação de senha
-        if (usuario.senha !== senha) {
-            return res.status(401).json({ erro: 'E-mail ou senha incorretos' });
+        // Compara as senhas após remover espaços
+        if (String(usuario.senha).trim() !== senhaLimpa) {
+            return res.status(401).json({ erro: 'Senha incorreta' });
         }
 
         res.json({ mensagem: 'Login realizado com sucesso', usuario: usuario.nome });
     } catch (error) {
-        console.error('Erro no login:', error);
-        res.status(500).json({ erro: 'Erro ao autenticar', detalhe: error.message });
+        console.error('Erro detalhado no login:', error);
+        res.status(500).json({ 
+            erro: 'Erro ao autenticar no banco de dados', 
+            detalhe: error.message 
+        });
     }
 });
-
 // Cadastrar Novo Produto
 router.post('/produtos', upload.single('imagem'), async (req, res) => {
     try {
