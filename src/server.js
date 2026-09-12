@@ -13,24 +13,28 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Resolver o caminho base do projeto de forma dinâmica
+const publicPath = path.resolve(__dirname, '..', 'public');
+
 // Servir arquivos estáticos do front-end
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(publicPath));
 
 // Rotas da API
 app.use('/api/produtos', produtosRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Fallback para entregar o index.html nas rotas do Front
+// Fallback para entregar o index.html nas rotas de navegação
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api/')) {
         return res.status(404).json({ erro: 'Rota de API não encontrada' });
     }
-    res.sendFile(path.join(__dirname, '../public', 'index.html'));
+    res.sendFile(path.join(publicPath, 'index.html'));
 });
 
+// Exportar a instância do Express para a Vercel
 module.exports = app;
 
-// Inicialização local
+// Inicialização local (Apenas fora de produção/Vercel)
 if (process.env.NODE_ENV !== 'production') {
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
