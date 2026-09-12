@@ -1,35 +1,41 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const path = require('path');
 const pool = require('../config/database');
 
-// Configuração do Upload de Imagens com Multer (caminho seguro)
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, path.resolve(__dirname, '../../public/images'));
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
+// Configuração do Multer para memória (Seguro para Serverless / Vercel)
+const storage = multer.memoryStorage();
+const upload = multer({ 
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 } // limite de 5MB
 });
-
-const upload = multer({ storage });
 
 // Login do Administrador
 router.post('/login', async (req, res) => {
     try {
         const { email, senha } = req.body;
-        // Ajustado para gj_usuarios
-        const [rows] = await pool.query('SELECT * FROM gj_usuarios WHERE email = ? AND senha = ?', [email, senha]);
+
+        if (!email || !senha) {
+            return res.status(400).json({ erro: 'E-mail e senha são obrigatórios' });
+        }
+
+        // Busca o usuário apenas pelo e-mail para validar
+        const [rows] = await pool.query('SELECT * FROM gj_usuarios WHERE email = ?', [email]);
 
         if (rows.length === 0) {
             return res.status(401).json({ erro: 'E-mail ou senha incorretos' });
         }
 
-        res.json({ mensagem: 'Login realizado com sucesso', usuario: rows[0].nome });
+        const usuario = rows[0];
+
+        // Comparação de senha
+        if (usuario.senha !== senha) {
+            return res.status(401).json({ erro: 'E-mail ou senha incorretos' });
+        }
+
+        res.json({ mensagem: 'Login realizado com sucesso', usuario: usuario.nome });
     } catch (error) {
+        console.error('Erro no login:', error);
         res.status(500).json({ erro: 'Erro ao autenticar', detalhe: error.message });
     }
 });
@@ -38,12 +44,13 @@ router.post('/login', async (req, res) => {
 router.post('/produtos', upload.single('imagem'), async (req, res) => {
     try {
         const { nome, descricao, preco, categoria_id, destaque } = req.body;
-        const imagemNome = req.file ? req.file.filename : 'placeholder.jpg';
+        
+        // Define imagem padrão se nenhum arquivo foi enviado
+        const imagemNome = req.file ? req.file.originalname : 'placeholder.jpg';
 
         const isDestaque = destaque === 'true' || destaque === '1' || destaque === true ? 1 : 0;
         const catId = categoria_id && categoria_id !== '' ? categoria_id : null;
 
-        // Ajustado para gj_produtos
         const [result] = await pool.query(
             'INSERT INTO gj_produtos (nome, descricao, preco, imagem, categoria_id, destaque) VALUES (?, ?, ?, ?, ?, ?)',
             [nome, descricao || '', preco, imagemNome, catId, isDestaque]
@@ -51,6 +58,7 @@ router.post('/produtos', upload.single('imagem'), async (req, res) => {
 
         res.status(201).json({ mensagem: 'Produto cadastrado com sucesso!', id: result.insertId });
     } catch (error) {
+        console.error('Erro ao cadastrar produto:', error);
         res.status(500).json({ erro: 'Erro ao cadastrar produto', detalhe: error.message });
     }
 });
@@ -58,7 +66,6 @@ router.post('/produtos', upload.single('imagem'), async (req, res) => {
 // Buscar um Produto Específico por ID
 router.get('/produtos/:id', async (req, res) => {
     try {
-        // Ajustado para gj_produtos
         const [rows] = await pool.query('SELECT * FROM gj_produtos WHERE id = ?', [req.params.id]);
 
         if (rows.length === 0) {
@@ -77,7 +84,6 @@ router.put('/produtos/:id', upload.single('imagem'), async (req, res) => {
         const { id } = req.params;
         const { nome, descricao, preco, categoria_id, destaque } = req.body;
 
-        // Ajustado para gj_produtos
         const [produtoExistente] = await pool.query('SELECT * FROM gj_produtos WHERE id = ?', [id]);
 
         if (produtoExistente.length === 0) {
@@ -96,9 +102,8 @@ router.put('/produtos/:id', upload.single('imagem'), async (req, res) => {
             novoDestaque = (destaque === 'true' || destaque === '1' || destaque === true) ? 1 : 0;
         }
 
-        const novaImagem = req.file ? req.file.filename : produtoAtual.imagem;
+        const novaImagem = req.file ? req.file.originalname : produtoAtual.imagem;
 
-        // Ajustado para gj_produtos
         await pool.query(
             `UPDATE gj_produtos 
              SET nome = ?, descricao = ?, preco = ?, imagem = ?, categoria_id = ?, destaque = ? 
@@ -116,7 +121,6 @@ router.put('/produtos/:id', upload.single('imagem'), async (req, res) => {
 // Excluir Produto
 router.delete('/produtos/:id', async (req, res) => {
     try {
-        // Ajustado para gj_produtos
         const [result] = await pool.query('DELETE FROM gj_produtos WHERE id = ?', [req.params.id]);
 
         if (result.affectedRows === 0) {
