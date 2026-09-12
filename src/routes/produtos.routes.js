@@ -7,8 +7,8 @@ router.get('/destaques', async (req, res) => {
     try {
         const query = `
             SELECT p.*, c.nome as categoria_nome, c.slug as categoria_slug 
-            FROM produtos p 
-            LEFT JOIN categorias c ON p.categoria_id = c.id 
+            FROM gj_produtos p 
+            LEFT JOIN gj_categorias c ON p.categoria_id = c.id 
             WHERE p.destaque = 1
             ORDER BY p.id DESC
         `;
@@ -25,8 +25,8 @@ router.get('/', async (req, res) => {
         const { categoria, destaque } = req.query;
         let query = `
             SELECT p.*, c.nome as categoria_nome, c.slug as categoria_slug 
-            FROM produtos p 
-            LEFT JOIN categorias c ON p.categoria_id = c.id
+            FROM gj_produtos p 
+            LEFT JOIN gj_categorias c ON p.categoria_id = c.id
         `;
         const conditions = [];
         const params = [];
@@ -58,8 +58,8 @@ router.get('/:id', async (req, res) => {
     try {
         const query = `
             SELECT p.*, c.nome as categoria_nome, c.slug as categoria_slug 
-            FROM produtos p 
-            LEFT JOIN categorias c ON p.categoria_id = c.id 
+            FROM gj_produtos p 
+            LEFT JOIN gj_categorias c ON p.categoria_id = c.id 
             WHERE p.id = ?
         `;
         const [rows] = await pool.query(query, [req.params.id]);
@@ -88,7 +88,7 @@ router.post('/', async (req, res) => {
         }
 
         const query = `
-            INSERT INTO produtos (nome, descricao, preco, imagem, categoria_id, destaque)
+            INSERT INTO gj_produtos (nome, descricao, preco, imagem, categoria_id, destaque)
             VALUES (?, ?, ?, ?, ?, ?)
         `;
         
@@ -117,13 +117,13 @@ router.put('/:id', async (req, res) => {
         const { nome, descricao, preco, imagem, categoria_id, destaque } = req.body;
 
         // Verifica se o produto existe
-        const [produtoExistente] = await pool.query('SELECT * FROM produtos WHERE id = ?', [id]);
+        const [produtoExistente] = await pool.query('SELECT * FROM gj_produtos WHERE id = ?', [id]);
         if (produtoExistente.length === 0) {
             return res.status(404).json({ mensagem: 'Produto não encontrado para edição' });
         }
 
         const query = `
-            UPDATE produtos 
+            UPDATE gj_produtos 
             SET nome = ?, 
                 descricao = ?, 
                 preco = ?, 
@@ -153,7 +153,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const [result] = await pool.query('DELETE FROM produtos WHERE id = ?', [id]);
+        const [result] = await pool.query('DELETE FROM gj_produtos WHERE id = ?', [id]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ mensagem: 'Produto não encontrado' });
