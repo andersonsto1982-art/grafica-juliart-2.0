@@ -20,7 +20,9 @@ const publicPath = path.resolve(__dirname, '..', 'public');
 app.use(express.static(publicPath));
 
 // Rotas da API
-app.use('/api/produtos', produtosRoutes);
+const adminRoutes = require('./routes/admin.routes');
+
+// Rota base para o painel
 app.use('/api/admin', adminRoutes);
 
 // Fallback para entregar o index.html nas rotas de navegação

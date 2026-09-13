@@ -14,59 +14,71 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Autenticação
-    // Autenticação
-formLogin.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const senha = document.getElementById('login-senha').value;
+    // Autenticação de Usuário
+    if (formLogin) {
+        formLogin.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const senha = document.getElementById('login-senha').value;
 
-    try {
-        const res = await fetch('/api/admin/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, senha })
+            try {
+                const res = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, senha })
+                });
+
+                // Captura a resposta como texto puro para evitar o erro JSON.parse em páginas HTML de erro
+                const textData = await res.text();
+                let data = {};
+                
+                try {
+                    data = JSON.parse(textData);
+                } catch (jsonErr) {
+                    console.error('Resposta não-JSON do servidor:', textData);
+                }
+
+                console.log('Status da requisição:', res.status);
+
+                if (res.ok) {
+                    loginSection.style.display = 'none';
+                    dashboardSection.style.display = 'block';
+                    carregarProdutosAdmin();
+                } else {
+                    alert(data.detalhe || data.erro || `Erro (${res.status}): Não foi possível autenticar.`);
+                }
+            } catch (err) {
+                console.error('Erro detalhado no fetch:', err);
+                alert('Erro de conexão com o servidor. Verifique o console (F12).');
+            }
         });
-
-        const data = await res.json();
-        console.log('Resposta do Servidor:', res.status, data);
-
-        if (res.ok) {
-            loginSection.style.display = 'none';
-            dashboardSection.style.display = 'block';
-            carregarProdutosAdmin();
-        } else {
-            // Exibe a mensagem de erro que vem do banco ou servidor
-            alert(data.detalhe || data.erro || 'Erro ao realizar login');
-        }
-    } catch (err) {
-        console.error('Erro detalhado no fetch:', err);
-        alert('Erro de conexão com o servidor. Verifique o console (F12).');
     }
-});
 
     // Cadastro de produto
-    formProduto.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(formProduto);
+    if (formProduto) {
+        formProduto.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(formProduto);
 
-        try {
-            const res = await fetch('/api/admin/produtos', {
-                method: 'POST',
-                body: formData
-            });
+            try {
+                const res = await fetch('/api/admin/produtos', {
+                    method: 'POST',
+                    body: formData
+                });
 
-            if (res.ok) {
-                alert('Produto cadastrado com sucesso!');
-                formProduto.reset();
-                carregarProdutosAdmin();
-            } else {
-                alert('Erro ao cadastrar produto');
+                if (res.ok) {
+                    alert('Produto cadastrado com sucesso!');
+                    formProduto.reset();
+                    carregarProdutosAdmin();
+                } else {
+                    const data = await res.json().catch(() => ({}));
+                    alert(data.erro || 'Erro ao cadastrar produto');
+                }
+            } catch (err) {
+                alert('Erro de conexão ao salvar produto');
             }
-        } catch (err) {
-            alert('Erro de conexão ao salvar produto');
-        }
-    });
+        });
+    }
 
     // Atualização / Edição de produto
     if (formEditarProduto) {
@@ -93,7 +105,7 @@ formLogin.addEventListener('submit', async (e) => {
                     toggleModal('modal-editar-produto');
                     carregarProdutosAdmin();
                 } else {
-                    const data = await res.json();
+                    const data = await res.json().catch(() => ({}));
                     alert(data.erro || 'Erro ao atualizar produto');
                 }
             } catch (err) {
@@ -110,7 +122,6 @@ formLogin.addEventListener('submit', async (e) => {
             const produtos = await res.json();
             listaProdutos.innerHTML = '';
 
-            // Armazena a lista globalmente para resgatar os dados no clique do botão Editar
             window.produtosListaCache = produtos;
 
             produtos.forEach(p => {
@@ -136,7 +147,7 @@ formLogin.addEventListener('submit', async (e) => {
         }
     }
 
-    // Função para preencher e abrir o modal de edição
+    // Preencher e abrir modal de edição
     window.abrirModalEdicao = (id) => {
         const produto = window.produtosListaCache ? window.produtosListaCache.find(p => p.id === id) : null;
         if (!produto) return;
@@ -150,7 +161,7 @@ formLogin.addEventListener('submit', async (e) => {
         toggleModal('modal-editar-produto');
     };
 
-    // Função para excluir produto
+    // Excluir produto
     window.excluirProduto = async (id) => {
         if (confirm('Tem certeza que deseja excluir este item?')) {
             try {
