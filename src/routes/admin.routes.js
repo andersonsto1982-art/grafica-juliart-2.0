@@ -19,8 +19,11 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ erro: 'E-mail e senha são obrigatórios' });
         }
 
-        // Busca o usuário apenas pelo e-mail para validar
-        const [rows] = await pool.query('SELECT * FROM gj_usuarios WHERE email = ?', [email]);
+        const emailLimpo = email.trim();
+        const senhaLimpa = senha.trim();
+
+        // Busca o usuário pelo e-mail
+        const [rows] = await pool.query('SELECT * FROM gj_usuarios WHERE email = ?', [emailLimpo]);
 
         if (rows.length === 0) {
             return res.status(401).json({ erro: 'E-mail ou senha incorretos' });
@@ -28,15 +31,15 @@ router.post('/login', async (req, res) => {
 
         const usuario = rows[0];
 
-        // Comparação de senha
-        if (usuario.senha !== senha) {
+        // Comparação de senha com remoção de espaços nas pontas
+        if (String(usuario.senha).trim() !== senhaLimpa) {
             return res.status(401).json({ erro: 'E-mail ou senha incorretos' });
         }
 
         res.json({ mensagem: 'Login realizado com sucesso', usuario: usuario.nome });
     } catch (error) {
-        console.error('Erro no login:', error);
-        res.status(500).json({ erro: 'Erro ao autenticar', detalhe: error.message });
+        console.error('Erro detalhado no login:', error);
+        res.status(500).json({ erro: 'Erro ao autenticar no banco de dados', detalhe: error.message });
     }
 });
 
