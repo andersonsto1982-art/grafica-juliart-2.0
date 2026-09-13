@@ -15,30 +15,35 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Autenticação
-    formLogin.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('login-email').value;
-        const senha = document.getElementById('login-senha').value;
+    // Autenticação
+formLogin.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const senha = document.getElementById('login-senha').value;
 
-        try {
-            const res = await fetch('/api/admin/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, senha })
-            });
+    try {
+        const res = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, senha })
+        });
 
-            const data = await res.json();
-            if (res.ok) {
-                loginSection.style.display = 'none';
-                dashboardSection.style.display = 'block';
-                carregarProdutosAdmin();
-            } else {
-                alert(data.erro || 'Erro ao realizar login');
-            }
-        } catch (err) {
-            alert('Erro ao realizar login');
+        const data = await res.json();
+        console.log('Resposta do Servidor:', res.status, data);
+
+        if (res.ok) {
+            loginSection.style.display = 'none';
+            dashboardSection.style.display = 'block';
+            carregarProdutosAdmin();
+        } else {
+            // Exibe a mensagem de erro que vem do banco ou servidor
+            alert(data.detalhe || data.erro || 'Erro ao realizar login');
         }
-    });
+    } catch (err) {
+        console.error('Erro detalhado no fetch:', err);
+        alert('Erro de conexão com o servidor. Verifique o console (F12).');
+    }
+});
 
     // Cadastro de produto
     formProduto.addEventListener('submit', async (e) => {
