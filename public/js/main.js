@@ -12,6 +12,15 @@ function toggleModal(modalId) {
     }
 }
 
+// Helper para tratar/normalizar o caminho da imagem no front-end
+function obterUrlImagem(imagem) {
+    if (!imagem) return '/images/placeholder.jpg';
+    if (imagem.startsWith('http://') || imagem.startsWith('https://')) {
+        return imagem;
+    }
+    return imagem.startsWith('/') ? imagem : `/${imagem}`;
+}
+
 // =======================================================
 // GERENCIAMENTO DO CARRINHO (UI, SOMA E REMOÇÃO)
 // =======================================================
@@ -66,14 +75,11 @@ function adicionarAoCarrinho(produto) {
     carrinho.push(produto);
     atualizarCarrinhoUI();
 
-    // Animação no badge ao adicionar
     const badge = document.getElementById('carrinho-qtd-badge');
     if (badge) {
         badge.style.transform = 'scale(1.4)';
         setTimeout(() => badge.style.transform = 'scale(1)', 200);
     }
-
-    console.log('Carrinho atual:', carrinho);
 }
 
 // Função para remover um item individual do carrinho pelo índice
@@ -116,7 +122,6 @@ function finalizarPedidoWhatsApp() {
 
     const url = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
     
-    // Fecha o modal do carrinho caso esteja aberto
     toggleModal('modal-carrinho');
 
     window.open(url, '_blank');
@@ -129,10 +134,8 @@ function finalizarPedidoWhatsApp() {
 document.addEventListener('DOMContentLoaded', () => {
     let lightbox = null;
 
-    // Inicializa a interface do carrinho no carregamento
     atualizarCarrinhoUI();
 
-    // Inicialização do Swiper para a seção de Eventos
     if (document.querySelector('.eventos-swiper') && typeof Swiper !== 'undefined') {
         window.eventosSwiper = new Swiper('.eventos-swiper', {
             slidesPerView: 1,
@@ -163,7 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btnFinalizarWhatsapp.addEventListener('click', finalizarPedidoWhatsApp);
     }
 
-    // Fechar modais ao clicar no fundo escuro (fora do conteúdo)
     window.addEventListener('click', (e) => {
         if (e.target.classList.contains('modal')) {
             e.target.classList.remove('active');
@@ -200,10 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const slide = document.createElement('div');
                 slide.classList.add('swiper-slide', 'banner-slide');
 
-                const imagemUrl = prod.imagem.startsWith('http') 
-                    ? prod.imagem 
-                    : `images/${prod.imagem}`;
-
+                const imagemUrl = obterUrlImagem(prod.imagem);
                 slide.style.backgroundImage = `url('${imagemUrl}')`;
 
                 const precoFormatado = Number(prod.preco).toLocaleString('pt-BR', {
@@ -254,9 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currency: 'BRL'
         });
 
-        const imagemUrl = produto.imagem.startsWith('http') 
-            ? produto.imagem 
-            : `images/${produto.imagem}`;
+        const imagemUrl = obterUrlImagem(produto.imagem);
 
         const link = document.createElement('a');
         link.href = imagemUrl;
@@ -267,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const img = document.createElement('img');
         img.src = imagemUrl;
         img.alt = produto.nome;
-        img.onerror = () => { img.src = 'https://via.placeholder.com/300x300?text=Grafica+Juliart'; };
+        img.onerror = () => { img.src = '/images/placeholder.jpg'; };
         link.appendChild(img);
 
         const h4 = document.createElement('h4');
@@ -335,7 +332,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Atualização segura dos Swipers
             if (window.canecasSwiper && typeof window.canecasSwiper.update === 'function') window.canecasSwiper.update();
             if (window.camisasSwiper && typeof window.camisasSwiper.update === 'function') window.camisasSwiper.update();
             if (window.itensSwiper && typeof window.itensSwiper.update === 'function') window.itensSwiper.update();
@@ -348,9 +344,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // =======================================================
-    // LÓGICA DINÂMICA DO FORMULÁRIO "MONTE SEU PERSONALIZADO"
-    // =======================================================
     const selectTipo = document.getElementById('custom-tipo');
     const containerCampos = document.getElementById('campos-especificos');
 
@@ -461,7 +454,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Submissão do formulário personalizado
     const formCustom = document.getElementById('form-custom-item');
     if (formCustom) {
         formCustom.addEventListener('submit', (e) => {
