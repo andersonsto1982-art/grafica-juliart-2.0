@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const formEditarProduto = document.getElementById('form-editar-produto');
     const listaProdutos = document.getElementById('lista-admin-produtos');
 
-    // Função global para abrir/fechar modais
     window.toggleModal = (modalId) => {
         const modal = document.getElementById(modalId);
         if (modal) {
@@ -30,12 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const textData = await res.text();
                 let data = {};
-                
-                try {
-                    data = JSON.parse(textData);
-                } catch (jsonErr) {
-                    console.error('Resposta não-JSON do servidor:', textData);
-                }
+                try { data = JSON.parse(textData); } catch (jsonErr) {}
 
                 if (res.ok) {
                     loginSection.style.display = 'none';
@@ -51,23 +45,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Cadastro de produto (Com captura completa de erros do MySQL)
+    // Cadastro de produto (via JSON)
     if (formProduto) {
         formProduto.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(formProduto);
+            const payload = Object.fromEntries(formData.entries());
 
             try {
                 const res = await fetch('/api/admin/produtos', {
                     method: 'POST',
-                    body: formData
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
 
-                const textData = await res.text();
-                let data = {};
-                try {
-                    data = JSON.parse(textData);
-                } catch (e) {}
+                const data = await res.json().catch(() => ({}));
 
                 if (res.ok) {
                     alert('✅ Produto cadastrado com sucesso!');
@@ -83,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Atualização / Edição de produto
+    // Edição de produto
     if (formEditarProduto) {
         formEditarProduto.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -93,7 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 nome: document.getElementById('edit-prod-nome').value,
                 preco: parseFloat(document.getElementById('edit-prod-preco').value),
                 categoria_id: document.getElementById('edit-prod-categoria').value,
-                descricao: document.getElementById('edit-prod-descricao').value
+                descricao: document.getElementById('edit-prod-descricao').value,
+                imagem: document.getElementById('edit-prod-imagem').value
             };
 
             try {
@@ -153,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Preencher e abrir modal de edição
+    // Preencher modal de edição
     window.abrirModalEdicao = (id) => {
         const produto = window.produtosListaCache ? window.produtosListaCache.find(p => p.id === id) : null;
         if (!produto) return;
@@ -163,6 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('edit-prod-preco').value = produto.preco || '';
         document.getElementById('edit-prod-categoria').value = produto.categoria_id || '1';
         document.getElementById('edit-prod-descricao').value = produto.descricao || '';
+        document.getElementById('edit-prod-imagem').value = produto.imagem || '';
 
         toggleModal('modal-editar-produto');
     };
