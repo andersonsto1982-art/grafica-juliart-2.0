@@ -28,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ email, senha })
                 });
 
-                // Captura a resposta como texto puro para evitar o erro JSON.parse em páginas HTML de erro
                 const textData = await res.text();
                 let data = {};
                 
@@ -37,8 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (jsonErr) {
                     console.error('Resposta não-JSON do servidor:', textData);
                 }
-
-                console.log('Status da requisição:', res.status);
 
                 if (res.ok) {
                     loginSection.style.display = 'none';
@@ -54,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Cadastro de produto
+    // Cadastro de produto (Com captura completa de erros do MySQL)
     if (formProduto) {
         formProduto.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -66,16 +63,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: formData
                 });
 
+                const textData = await res.text();
+                let data = {};
+                try {
+                    data = JSON.parse(textData);
+                } catch (e) {}
+
                 if (res.ok) {
-                    alert('Produto cadastrado com sucesso!');
+                    alert('✅ Produto cadastrado com sucesso!');
                     formProduto.reset();
                     carregarProdutosAdmin();
                 } else {
-                    const data = await res.json().catch(() => ({}));
-                    alert(data.erro || 'Erro ao cadastrar produto');
+                    alert(data.detalhe || data.erro || `Erro (${res.status}): Falha ao cadastrar produto.`);
                 }
             } catch (err) {
-                alert('Erro de conexão ao salvar produto');
+                console.error('Erro ao cadastrar produto:', err);
+                alert('Erro de conexão ao salvar produto.');
             }
         });
     }
@@ -100,13 +103,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify(dadosAtualizados)
                 });
 
+                const data = await res.json().catch(() => ({}));
+
                 if (res.ok) {
                     alert('✅ Produto atualizado com sucesso!');
                     toggleModal('modal-editar-produto');
                     carregarProdutosAdmin();
                 } else {
-                    const data = await res.json().catch(() => ({}));
-                    alert(data.erro || 'Erro ao atualizar produto');
+                    alert(data.detalhe || data.erro || 'Erro ao atualizar produto');
                 }
             } catch (err) {
                 console.error('Erro ao atualizar produto:', err);
@@ -124,24 +128,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
             window.produtosListaCache = produtos;
 
-            produtos.forEach(p => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${p.nome}</td>
-                    <td>R$ ${Number(p.preco).toFixed(2)}</td>
-                    <td>
-                        <div class="admin-actions">
-                            <button class="btn-edit" onclick="abrirModalEdicao(${p.id})">
-                                <i class="fa-solid fa-pen-to-square"></i> Editar
-                            </button>
-                            <button class="btn-delete" onclick="excluirProduto(${p.id})">
-                                <i class="fa-solid fa-trash"></i> Excluir
-                            </button>
-                        </div>
-                    </td>
-                `;
-                listaProdutos.appendChild(tr);
-            });
+            if (Array.isArray(produtos)) {
+                produtos.forEach(p => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${p.nome}</td>
+                        <td>R$ ${Number(p.preco).toFixed(2)}</td>
+                        <td>
+                            <div class="admin-actions">
+                                <button class="btn-edit" onclick="abrirModalEdicao(${p.id})">
+                                    <i class="fa-solid fa-pen-to-square"></i> Editar
+                                </button>
+                                <button class="btn-delete" onclick="excluirProduto(${p.id})">
+                                    <i class="fa-solid fa-trash"></i> Excluir
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    listaProdutos.appendChild(tr);
+                });
+            }
         } catch (err) {
             console.error('Erro ao carregar produtos:', err);
         }
@@ -169,7 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (res.ok) {
                     carregarProdutosAdmin();
                 } else {
-                    alert('Erro ao excluir produto.');
+                    const data = await res.json().catch(() => ({}));
+                    alert(data.detalhe || data.erro || 'Erro ao excluir produto.');
                 }
             } catch (err) {
                 alert('Erro de conexão ao excluir produto.');
