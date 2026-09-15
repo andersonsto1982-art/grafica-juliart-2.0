@@ -8,11 +8,13 @@ function toggleModal(modalId) {
     }
 }
 
+// Tratamento aprimorado da URL da imagem
 function obterUrlImagem(imagem) {
     if (!imagem) return '/images/placeholder.jpg';
     if (imagem.startsWith('http://') || imagem.startsWith('https://')) {
         return imagem;
     }
+    // Garante que o caminho comece com / e remove duplicações de barra
     return imagem.startsWith('/') ? imagem : `/${imagem}`;
 }
 

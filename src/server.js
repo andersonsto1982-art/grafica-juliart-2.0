@@ -13,15 +13,19 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Rotas da API (Devem vir ANTES dos arquivos estáticos)
-app.use('/api/produtos', produtosRoutes);
-app.use('/api/admin', adminRoutes);
-
-// Resolução do caminho da pasta public a partir de 'src'
+// Resolução dos caminhos
 const publicPath = path.resolve(__dirname, '..', 'public');
+const uploadsPath = path.resolve(__dirname, '..', 'uploads'); // Exposição da pasta de arquivos enviados
+
+// Servir imagens e uploads enviados via Multer
+app.use('/uploads', express.static(uploadsPath));
 
 // Servir arquivos estáticos do front-end
 app.use(express.static(publicPath));
+
+// Rotas da API (Devem vir ANTES do fallback)
+app.use('/api/produtos', produtosRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Fallback para entregar o index.html nas rotas do front (evita 404 em rotas de API não encontradas)
 app.get('*', (req, res) => {
