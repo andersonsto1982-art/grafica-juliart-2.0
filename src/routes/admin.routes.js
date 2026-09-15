@@ -4,9 +4,10 @@ const pool = require('../config/database');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
+const https = require('https');
 const authMiddleware = require('../middleware/auth');
 
-// Configuração do Multer (armazenamento em memória temporária para envio)
+// Configuração do Multer (armazenamento em memória temporária)
 const upload = multer({ storage: multer.memoryStorage() });
 
 // Login do Administrador
@@ -41,7 +42,7 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// Rota de Upload de Imagem para o ImgBB (PROTEGIDA)
+// Rota de Upload de Imagem para o ImgBB (PROTEGIDA - Módulo HTTPS Nativo)
 router.post('/upload', authMiddleware, upload.single('imagemFile'), async (req, res) => {
     try {
         if (!req.file) {
@@ -53,23 +54,48 @@ router.post('/upload', authMiddleware, upload.single('imagemFile'), async (req, 
             return res.status(500).json({ erro: 'Chave da API do ImgBB não configurada no servidor.' });
         }
 
-        // Converter buffer da imagem para base64
         const base64Image = req.file.buffer.toString('base64');
-        const formData = new URLSearchParams();
-        formData.append('image', base64Image);
+        const postData = new URLSearchParams({ image: base64Image }).toString();
 
-        const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+        const options = {
+            hostname: 'api.imgbb.com',
+            path: `/1/upload?key=${apiKey}`,
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': Buffer.byteLength(postData)
+            }
+        };
+
+        const imgbbReq = https.request(options, (imgbbRes) => {
+            let data = '';
+
+            imgbbRes.on('data', (chunk) => {
+                data += chunk;
+            });
+
+            imgbbRes.on('end', () => {
+                try {
+                    const json = JSON.parse(data);
+                    if (json.success) {
+                        return res.json({ url: json.data.url });
+                    } else {
+                        return res.status(500).json({ erro: 'Erro no envio para o ImgBB', detalhe: json });
+                    }
+                } catch (e) {
+                    return res.status(500).json({ erro: 'Resposta inválida do ImgBB' });
+                }
+            });
         });
 
-        const data = await response.json();
+        imgbbReq.on('error', (err) => {
+            console.error('Erro na requisição para ImgBB:', err);
+            return res.status(500).json({ erro: 'Falha na comunicação com ImgBB', detalhe: err.message });
+        });
 
-        if (data.success) {
-            return res.json({ url: data.data.url });
-        } else {
-            return res.status(500).json({ erro: 'Erro no envio para o ImgBB', detalhe: data });
-        }
+        imgbbReq.write(postData);
+        imgbbReq.end();
+
     } catch (error) {
         console.error('Erro no upload de imagem:', error);
         res.status(500).json({ erro: 'Erro ao processar imagem', detalhe: error.message });
