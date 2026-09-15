@@ -215,3 +215,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 });
+
+            const btnLogout = document.getElementById('btn-logout');
+            if (btnLogout) {
+                btnLogout.addEventListener('click', () => {
+                    localStorage.removeItem('juliart_token');
+                    location.reload();
+                });
+}

@@ -1,10 +1,6 @@
-// Variável do carrinho (global no escopo da página)
 let carrinho = [];
-
-// INSIRA SEU NÚMERO DO WHATSAPP AQUI (Com DDD, apenas números)
 const NUMERO_WHATSAPP = '558191427836';
 
-// Função global para abrir/fechar modais
 function toggleModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -12,7 +8,6 @@ function toggleModal(modalId) {
     }
 }
 
-// Helper para tratar/normalizar o caminho da imagem no front-end
 function obterUrlImagem(imagem) {
     if (!imagem) return '/images/placeholder.jpg';
     if (imagem.startsWith('http://') || imagem.startsWith('https://')) {
@@ -21,18 +16,12 @@ function obterUrlImagem(imagem) {
     return imagem.startsWith('/') ? imagem : `/${imagem}`;
 }
 
-// =======================================================
-// GERENCIAMENTO DO CARRINHO (UI, SOMA E REMOÇÃO)
-// =======================================================
-
-// Função para atualizar a interface do carrinho (Badge, Lista e Total)
 function atualizarCarrinhoUI() {
     const badge = document.getElementById('carrinho-qtd-badge');
     const lista = document.getElementById('carrinho-lista-itens');
     const totalElemento = document.getElementById('carrinho-valor-total');
 
     if (badge) badge.textContent = carrinho.length;
-
     if (!lista || !totalElemento) return;
 
     lista.innerHTML = '';
@@ -43,7 +32,6 @@ function atualizarCarrinhoUI() {
     } else {
         carrinho.forEach((item, index) => {
             valorTotal += Number(item.preco);
-
             const precoFormatado = Number(item.preco).toLocaleString('pt-BR', {
                 style: 'currency',
                 currency: 'BRL'
@@ -70,10 +58,30 @@ function atualizarCarrinhoUI() {
     });
 }
 
-// Função para adicionar produto ao carrinho
+function mostrarToast(mensagem) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.classList.add('toast-notification');
+    toast.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${mensagem}`;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+
 function adicionarAoCarrinho(produto) {
     carrinho.push(produto);
     atualizarCarrinhoUI();
+
+    mostrarToast(`"${produto.nome}" foi adicionado ao carrinho!`);
 
     const badge = document.getElementById('carrinho-qtd-badge');
     if (badge) {
@@ -82,13 +90,11 @@ function adicionarAoCarrinho(produto) {
     }
 }
 
-// Função para remover um item individual do carrinho pelo índice
 function removerDoCarrinho(index) {
     carrinho.splice(index, 1);
     atualizarCarrinhoUI();
 }
 
-// Função para limpar todos os itens do carrinho
 function limparCarrinho() {
     if (carrinho.length === 0) return;
     if (confirm('Deseja realmente limpar todos os itens do carrinho?')) {
@@ -97,13 +103,7 @@ function limparCarrinho() {
     }
 }
 
-// Função para enviar o pedido via WhatsApp
 function finalizarPedidoWhatsApp() {
-    if (!NUMERO_WHATSAPP || NUMERO_WHATSAPP === '5511999999999') {
-        alert('Por favor, configure o número do WhatsApp no arquivo main.js!');
-        return;
-    }
-
     if (carrinho.length === 0) {
         alert('Seu carrinho está vazio! Adicione alguns produtos antes de finalizar.');
         return;
@@ -121,68 +121,34 @@ function finalizarPedidoWhatsApp() {
     mensagem += '\n\n*Aguardo orientações para envio da arte e chave PIX/pagamento!*';
 
     const url = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
-    
     toggleModal('modal-carrinho');
-
     window.open(url, '_blank');
 }
 
-// =======================================================
-// INICIALIZAÇÃO DOS COMPONENTES DA PÁGINA
-// =======================================================
-
 document.addEventListener('DOMContentLoaded', () => {
-    let lightbox = null;
-
     atualizarCarrinhoUI();
-
-    if (document.querySelector('.eventos-swiper') && typeof Swiper !== 'undefined') {
-        window.eventosSwiper = new Swiper('.eventos-swiper', {
-            slidesPerView: 1,
-            spaceBetween: 20,
-            navigation: {
-                nextEl: '.eventos-next',
-                prevEl: '.eventos-prev',
-            },
-            breakpoints: {
-                640: { slidesPerView: 2, spaceBetween: 20 },
-                768: { slidesPerView: 3, spaceBetween: 30 },
-                1024: { slidesPerView: 4, spaceBetween: 30 },
-            }
-        });
-    }
 
     const btnAbrirPrecos = document.getElementById('btn-abrir-precos');
     const btnFecharPrecos = document.getElementById('btn-fechar-precos');
-    const btnFinalizarWhatsapp = document.getElementById('btn-finalizar-whatsapp');
 
-    if (btnAbrirPrecos) {
-        btnAbrirPrecos.addEventListener('click', () => toggleModal('modal-precos'));
-    }
-    if (btnFecharPrecos) {
-        btnFecharPrecos.addEventListener('click', () => toggleModal('modal-precos'));
-    }
-    if (btnFinalizarWhatsapp) {
-        btnFinalizarWhatsapp.addEventListener('click', finalizarPedidoWhatsApp);
-    }
+    if (btnAbrirPrecos) btnAbrirPrecos.addEventListener('click', () => toggleModal('modal-precos'));
+    if (btnFecharPrecos) btnFecharPrecos.addEventListener('click', () => toggleModal('modal-precos'));
 
-    window.addEventListener('click', (e) => {
-        if (e.target.classList.contains('modal')) {
-            e.target.classList.remove('active');
-        }
-    });
+    // Filtro de Busca em Tempo Real
+    const inputBusca = document.getElementById('input-busca-produto');
+    if (inputBusca) {
+        inputBusca.addEventListener('input', (e) => {
+            const termo = e.target.value.toLowerCase().trim();
+            const todosCards = document.querySelectorAll('.product-card, .swiper-slide');
 
-    function initLightbox() {
-        if (typeof GLightbox === 'undefined') return;
-
-        if (lightbox) {
-            lightbox.destroy();
-        }
-        lightbox = GLightbox({
-            selector: '.glightbox',
-            touchNavigation: true,
-            loop: true,
-            zoomable: true
+            todosCards.forEach(card => {
+                const nome = card.querySelector('h3, h4, h2')?.textContent.toLowerCase() || '';
+                if (nome.includes(termo)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
         });
     }
 
@@ -214,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="banner-content">
                         <h2>${prod.nome}</h2>
                         <p>${prod.descricao || 'Confira nossas condições e faça seu pedido!'}</p>
-                        <button class="btn-pink btn-destaque-cart" style="margin-top: 15px; cursor: pointer; position: relative; z-index: 10;">
+                        <button class="btn-pink btn-destaque-cart" style="margin-top: 15px; cursor: pointer;">
                             <i class="fa-solid fa-cart-shopping"></i> Comprar por ${precoFormatado}
                         </button>
                     </div>
@@ -224,295 +190,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (btnCart) {
                     btnCart.addEventListener('click', (e) => {
                         e.preventDefault();
-                        e.stopPropagation();
                         adicionarAoCarrinho(prod);
                     });
                 }
 
                 wrapper.appendChild(slide);
             });
-
-            if (window.bannerSwiper && typeof window.bannerSwiper.update === 'function') {
-                window.bannerSwiper.update();
-                if (window.bannerSwiper.autoplay && typeof window.bannerSwiper.autoplay.start === 'function') {
-                    window.bannerSwiper.autoplay.start();
-                }
-            }
-
         } catch (error) {
             console.error('Erro ao carregar produtos em destaque:', error);
         }
     }
 
-    function createProductCard(produto, galeriaNome) {
-        const slide = document.createElement('div');
-        slide.classList.add('swiper-slide', 'product-card');
-
-        const precoFormatado = Number(produto.preco).toLocaleString('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-        });
-
-        const imagemUrl = obterUrlImagem(produto.imagem);
-
-        const link = document.createElement('a');
-        link.href = imagemUrl;
-        link.classList.add('glightbox');
-        link.setAttribute('data-gallery', galeriaNome);
-        link.setAttribute('data-title', produto.nome);
-
-        const img = document.createElement('img');
-        img.src = imagemUrl;
-        img.alt = produto.nome;
-        img.onerror = () => { img.src = '/images/placeholder.jpg'; };
-        link.appendChild(img);
-
-        const h4 = document.createElement('h4');
-        h4.textContent = produto.nome;
-
-        const pDescricao = document.createElement('p');
-        pDescricao.classList.add('product-description');
-        pDescricao.textContent = produto.descricao || 'Sem descrição disponível';
-
-        const spanPreco = document.createElement('span');
-        spanPreco.classList.add('price');
-        spanPreco.textContent = precoFormatado;
-
-        const btnCart = document.createElement('button');
-        btnCart.classList.add('btn-cart');
-        btnCart.innerHTML = '<i class="fa-solid fa-cart-shopping"></i> Adicionar ao Carrinho';
-        
-        btnCart.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            adicionarAoCarrinho(produto);
-        });
-
-        slide.appendChild(link);
-        slide.appendChild(h4);
-        slide.appendChild(pDescricao);
-        slide.appendChild(spanPreco);
-        slide.appendChild(btnCart);
-
-        return slide;
-    }
-
-    async function carregarProdutos() {
-        try {
-            const response = await fetch('/api/produtos');
-            if (!response.ok) throw new Error('Erro ao buscar produtos da API');
-
-            const produtos = await response.json();
-
-            const gridCanecas = document.getElementById('grid-canecas');
-            const gridCamisas = document.getElementById('grid-camisas');
-            const gridItens = document.getElementById('grid-itens');
-            const gridEventos = document.getElementById('grid-eventos');
-
-            if (gridCanecas) gridCanecas.innerHTML = '';
-            if (gridCamisas) gridCamisas.innerHTML = '';
-            if (gridItens) gridItens.innerHTML = '';
-            if (gridEventos) gridEventos.innerHTML = '';
-
-            produtos.forEach(produto => {
-                const slug = produto.categoria_slug ? produto.categoria_slug.toLowerCase() : '';
-
-                if (slug === 'canecas' && gridCanecas) {
-                    const card = createProductCard(produto, 'canecas');
-                    gridCanecas.appendChild(card);
-                } else if (slug === 'camisas' && gridCamisas) {
-                    const card = createProductCard(produto, 'camisas');
-                    gridCamisas.appendChild(card);
-                } else if ((slug === 'eventos' || slug === 'personalizados-eventos') && gridEventos) {
-                    const card = createProductCard(produto, 'eventos');
-                    gridEventos.appendChild(card);
-                } else if (gridItens) {
-                    const card = createProductCard(produto, 'itens');
-                    gridItens.appendChild(card);
-                }
-            });
-
-            if (window.canecasSwiper && typeof window.canecasSwiper.update === 'function') window.canecasSwiper.update();
-            if (window.camisasSwiper && typeof window.camisasSwiper.update === 'function') window.camisasSwiper.update();
-            if (window.itensSwiper && typeof window.itensSwiper.update === 'function') window.itensSwiper.update();
-            if (window.eventosSwiper && typeof window.eventosSwiper.update === 'function') window.eventosSwiper.update();
-
-            initLightbox();
-
-        } catch (error) {
-            console.error('Erro ao carregar produtos:', error);
-        }
-    }
-
-    const selectTipo = document.getElementById('custom-tipo');
-    const containerCampos = document.getElementById('campos-especificos');
-
-    if (selectTipo && containerCampos) {
-        selectTipo.addEventListener('change', (e) => {
-            const valor = e.target.value;
-            containerCampos.innerHTML = '';
-
-            if (valor === 'Camisa') {
-                containerCampos.innerHTML = `
-                    <div class="form-group" style="flex: 1; min-width: 140px;">
-                        <label for="custom-tamanho"><strong>Tamanho:</strong></label>
-                        <select id="custom-tamanho" class="form-control" required>
-                            <option value="" disabled selected>Selecione...</option>
-                            <option value="Infantil (2 ao 14)">Infantil (2 ao 14)</option>
-                            <option value="P">P</option>
-                            <option value="M">M</option>
-                            <option value="G">G</option>
-                            <option value="GG">GG</option>
-                            <option value="EXG">EXG</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="flex: 1; min-width: 140px;">
-                        <label for="custom-cor"><strong>Cor da Camisa:</strong></label>
-                        <input type="text" id="custom-cor" class="form-control" placeholder="Ex: Branca, Preta, Rosa" required>
-                    </div>
-                    <div class="form-group" style="flex: 1; min-width: 140px;">
-                        <label for="custom-tecido"><strong>Tipo de Tecido:</strong></label>
-                        <select id="custom-tecido" class="form-control" required>
-                            <option value="" disabled selected>Selecione...</option>
-                            <option value="100% Algodão">100% Algodão</option>
-                            <option value="100% Poliéster">100% Poliéster</option>
-                            <option value="PV (Malha Fria)">PV (Malha Fria)</option>
-                            <option value="Dry Fit">Dry Fit</option>
-                        </select>
-                    </div>
-                `;
-            } else if (valor === 'Caneca') {
-                containerCampos.innerHTML = `
-                    <div class="form-group" style="flex: 1; min-width: 140px;">
-                        <label for="custom-tipo-caneca"><strong>Tipo de Caneca:</strong></label>
-                        <select id="custom-tipo-caneca" class="form-control" required>
-                            <option value="" disabled selected>Selecione...</option>
-                            <option value="Porcelana Branca Tradicional">Porcelana Branca</option>
-                            <option value="Porcelana com Alça/Interior Colorido">Alça/Interior Colorido</option>
-                            <option value="Caneca Mágica">Caneca Mágica</option>
-                            <option value="Polímero (Plástico Rígido)">Polímero (Infantil)</option>
-                            <option value="Alumínio / Chopp">Alumínio / Chopp</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="flex: 1; min-width: 140px;">
-                        <label for="custom-cor-caneca"><strong>Cor / Detalhes:</strong></label>
-                        <input type="text" id="custom-cor-caneca" class="form-control" placeholder="Ex: Branca, Alça Rosa, etc.">
-                    </div>
-                    <div class="form-group" style="flex: 1; min-width: 140px;">
-                        <label for="custom-capacidade"><strong>Capacidade:</strong></label>
-                        <select id="custom-capacidade" class="form-control">
-                            <option value="325ml (Padrão)">325ml (Padrão)</option>
-                            <option value="450ml / 500ml">450ml / 500ml</option>
-                        </select>
-                    </div>
-                `;
-            } else if (valor === 'Topo de Bolo') {
-                containerCampos.innerHTML = `
-                    <div class="form-group" style="flex: 1; min-width: 200px;">
-                        <label for="custom-estilo-topo"><strong>Estilo / Material:</strong></label>
-                        <select id="custom-estilo-topo" class="form-control" required>
-                            <option value="" disabled selected>Selecione...</option>
-                            <option value="Papel Fotográfico Simples">Papel Fotográfico</option>
-                            <option value="3D / Camadas em Scrap">3D com Camadas (Scrap)</option>
-                            <option value="Com Elementos em Lamicote (Dourado/Prata)">Lamicote Dourado/Prata</option>
-                            <option value="Acrílico Personalizado">Acrílico</option>
-                        </select>
-                    </div>
-                `;
-            } else if (valor === 'Comunicação Visual') {
-                containerCampos.innerHTML = `
-                    <div class="form-group" style="flex: 1; min-width: 160px;">
-                        <label for="custom-tipo-visual"><strong>Tipo de Item:</strong></label>
-                        <select id="custom-tipo-visual" class="form-control" required>
-                            <option value="" disabled selected>Selecione...</option>
-                            <option value="Banner com Bastão e Corda">Banner (Lona)</option>
-                            <option value="Adesivo em Vinil">Adesivo em Vinil</option>
-                            <option value="Placa em PS / MDF">Placa PS / MDF</option>
-                            <option value="Faixa de Divulgação">Faixa</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="flex: 1; min-width: 160px;">
-                        <label for="custom-dimensoes"><strong>Dimensões (Largura x Altura):</strong></label>
-                        <input type="text" id="custom-dimensoes" class="form-control" placeholder="Ex: 60x90 cm, 1x2 metros" required>
-                    </div>
-                `;
-            } else if (valor === 'Lembrancinha de Evento') {
-                containerCampos.innerHTML = `
-                    <div class="form-group" style="flex: 1; min-width: 200px;">
-                        <label for="custom-tipo-lembranca"><strong>Tipo de Lembrancinha:</strong></label>
-                        <select id="custom-tipo-lembranca" class="form-control" required>
-                            <option value="" disabled selected>Selecione...</option>
-                            <option value="Chaveiro Personalizado">Chaveiro</option>
-                            <option value="Botton / Mdf">Botton / Pin</option>
-                            <option value="Caixinha / Papelaria Personalizada">Caixinha Personalizada</option>
-                            <option value="Copo Long Drink / Twiister">Copo Long Drink / Twister</option>
-                            <option value="Outro Modelo">Outro Modelo</option>
-                        </select>
-                    </div>
-                `;
-            }
-        });
-    }
-
-    const formCustom = document.getElementById('form-custom-item');
-    if (formCustom) {
-        formCustom.addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            if (!NUMERO_WHATSAPP || NUMERO_WHATSAPP === '5511999999999') {
-                alert('Por favor, configure o número do WhatsApp no arquivo main.js!');
-                return;
-            }
-
-            const tipo = document.getElementById('custom-tipo').value;
-            const qtd = document.getElementById('custom-qtd').value;
-            const detalhes = document.getElementById('custom-detalhes').value;
-            const nomeCliente = document.getElementById('custom-nome').value;
-
-            let especificacoes = '';
-
-            if (tipo === 'Camisa') {
-                const tamanho = document.getElementById('custom-tamanho')?.value || 'Não informado';
-                const cor = document.getElementById('custom-cor')?.value || 'Não informada';
-                const tecido = document.getElementById('custom-tecido')?.value || 'Não informado';
-                especificacoes = `Tamanho: ${tamanho} | Cor: ${cor} | Tecido: ${tecido}`;
-            } else if (tipo === 'Caneca') {
-                const tipoCaneca = document.getElementById('custom-tipo-caneca')?.value || 'Não informado';
-                const corCaneca = document.getElementById('custom-cor-caneca')?.value || 'Padrão';
-                const capacidade = document.getElementById('custom-capacidade')?.value || '325ml';
-                especificacoes = `Tipo: ${tipoCaneca} | Cor/Detalhes: ${corCaneca} | Cap: ${capacidade}`;
-            } else if (tipo === 'Topo de Bolo') {
-                const estilo = document.getElementById('custom-estilo-topo')?.value || 'Não informado';
-                especificacoes = `Estilo/Material: ${estilo}`;
-            } else if (tipo === 'Comunicação Visual') {
-                const tipoVisual = document.getElementById('custom-tipo-visual')?.value || 'Não informado';
-                const dim = document.getElementById('custom-dimensoes')?.value || 'Não informado';
-                especificacoes = `Modelo: ${tipoVisual} | Tamanho/Medida: ${dim}`;
-            } else if (tipo === 'Lembrancinha de Evento') {
-                const tipoLembranca = document.getElementById('custom-tipo-lembranca')?.value || 'Não informado';
-                especificacoes = `Modelo: ${tipoLembranca}`;
-            } else {
-                especificacoes = 'Conforme descrição enviada';
-            }
-
-            let mensagem = `*Olá, Gráfica Juliart! Gostaria de um orçamento para um item personalizado:* 🎨\n\n`;
-            mensagem += `👤 *Cliente:* ${nomeCliente}\n`;
-            mensagem += `📦 *Produto:* ${tipo}\n`;
-            mensagem += `🔢 *Quantidade:* ${qtd}\n`;
-            mensagem += `🛠️ *Especificações:* ${especificacoes}\n`;
-            mensagem += `📝 *Detalhes da Arte / Tema:* ${detalhes}\n\n`;
-            mensagem += `*Aguardo seu contato para envio de modelos e valores!*`;
-
-            const url = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
-            
-            toggleModal('modal-custom');
-            formCustom.reset();
-            if (containerCampos) containerCampos.innerHTML = '';
-
-            window.open(url, '_blank');
-        });
-    }
-
     carregarDestaques();
-    carregarProdutos();
 });
