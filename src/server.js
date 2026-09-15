@@ -4,53 +4,56 @@ const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
 
-const produtosRoutes = require('./routes/produtos.routes');
-const adminRoutes = require('./routes/admin.routes');
-
 const app = express();
 
-// Middlewares globais
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Resolução segura de caminhos estáticos
+// Importação segura das rotas (evita crash se houver erro interno de módulo)
+try {
+    const produtosRoutes = require('./routes/produtos.routes');
+    const adminRoutes = require('./routes/admin.routes');
+    
+    app.use('/api/produtos', produtosRoutes);
+    app.use('/api/admin', adminRoutes);
+} catch (err) {
+    console.error('Erro ao carregar arquivos de rotas:', err.message);
+}
+
+// Resolução dos arquivos estáticos
 const publicPath = path.join(process.cwd(), 'public');
 const uploadsPath = path.join(process.cwd(), 'uploads');
 
-// Servir pasta de uploads apenas se ela existir fisicamente
 if (fs.existsSync(uploadsPath)) {
     app.use('/uploads', express.static(uploadsPath));
 }
 
-// Servir arquivos estáticos do front-end (CSS, JS, imagens públicas)
 if (fs.existsSync(publicPath)) {
     app.use(express.static(publicPath));
 }
 
-// Rotas da API
-app.use('/api/produtos', produtosRoutes);
-app.use('/api/admin', adminRoutes);
-
-// Fallback para entregar o index.html nas rotas do front-end
+// Fallback para SPA / index.html
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api/')) {
         return res.status(404).json({ erro: 'Rota de API não encontrada' });
     }
 
     const indexPath = path.join(publicPath, 'index.html');
-    
     if (fs.existsSync(indexPath)) {
         return res.sendFile(indexPath);
     }
-
-    res.status(404).send('Página não encontrada no servidor.');
+    res.status(404).send('Arquivo index.html não foi encontrado na pasta public.');
 });
 
-// Exportar a instância do Express para a Vercel
+// Middleware global de tratamento de erros
+app.use((err, req, res, next) => {
+    console.error('Erro interno do servidor:', err);
+    res.status(500).json({ erro: 'Erro interno no servidor', detalhe: err.message });
+});
+
 module.exports = app;
 
-// Inicialização em ambiente de desenvolvimento local
 if (process.env.NODE_ENV !== 'production') {
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {

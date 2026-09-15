@@ -80,17 +80,24 @@ router.post('/upload', authMiddleware, upload.single('imagemFile'), async (req, 
 router.post('/produtos', authMiddleware, async (req, res) => {
     try {
         const { nome, descricao, preco, categoria_id, destaque, imagem } = req.body;
-        const imagemUrl = imagem && imagem.trim() !== '' ? imagem.trim() : '/images/placeholder.jpg';
-        const isDestaque = destaque === 'true' || destaque === '1' || destaque === true ? 1 : 0;
-        const catId = categoria_id && categoria_id !== '' ? categoria_id : null;
+
+        if (!nome || preco === undefined || preco === null || preco === '') {
+            return res.status(400).json({ erro: 'Nome e preço são obrigatórios.' });
+        }
+
+        const precoNum = parseFloat(preco);
+        const imagemUrl = imagem && String(imagem).trim() !== '' ? String(imagem).trim() : '/images/placeholder.jpg';
+        const isDestaque = destaque === 'true' || destaque === '1' || destaque === 1 || destaque === true ? 1 : 0;
+        const catId = categoria_id && categoria_id !== '' ? parseInt(categoria_id, 10) : null;
 
         const [result] = await pool.query(
             'INSERT INTO gj_produtos (nome, descricao, preco, imagem, categoria_id, destaque) VALUES (?, ?, ?, ?, ?, ?)',
-            [nome, descricao || '', preco, imagemUrl, catId, isDestaque]
+            [nome.trim(), descricao || '', precoNum, imagemUrl, catId, isDestaque]
         );
 
         res.status(201).json({ mensagem: 'Produto cadastrado com sucesso!', id: result.insertId });
     } catch (error) {
+        console.error('Erro no cadastro de produto:', error);
         res.status(500).json({ erro: 'Erro ao cadastrar produto', detalhe: error.message });
     }
 });
@@ -105,12 +112,17 @@ router.put('/produtos/:id', authMiddleware, async (req, res) => {
         if (produtoExistente.length === 0) return res.status(404).json({ erro: 'Produto não encontrado.' });
 
         const produtoAtual = produtoExistente[0];
-        const novoNome = nome !== undefined && nome !== '' ? nome : produtoAtual.nome;
+        
+        const novoNome = nome !== undefined && String(nome).trim() !== '' ? String(nome).trim() : produtoAtual.nome;
         const novaDescricao = descricao !== undefined ? descricao : produtoAtual.descricao;
-        const novoPreco = preco !== undefined && preco !== '' ? preco : produtoAtual.preco;
-        const novaCategoria = categoria_id !== undefined && categoria_id !== '' ? categoria_id : produtoAtual.categoria_id;
-        const novaImagem = imagem !== undefined && imagem !== '' ? imagem : produtoAtual.imagem;
-        const novoDestaque = destaque !== undefined ? (destaque ? 1 : 0) : produtoAtual.destaque;
+        const novoPreco = preco !== undefined && preco !== '' ? parseFloat(preco) : produtoAtual.preco;
+        const novaCategoria = categoria_id !== undefined && categoria_id !== '' ? parseInt(categoria_id, 10) : produtoAtual.categoria_id;
+        const novaImagem = imagem !== undefined && String(imagem).trim() !== '' ? String(imagem).trim() : produtoAtual.imagem;
+        
+        let novoDestaque = produtoAtual.destaque;
+        if (destaque !== undefined) {
+            novoDestaque = (destaque === 'true' || destaque === '1' || destaque === 1 || destaque === true) ? 1 : 0;
+        }
 
         await pool.query(
             `UPDATE gj_produtos SET nome = ?, descricao = ?, preco = ?, imagem = ?, categoria_id = ?, destaque = ? WHERE id = ?`,
@@ -119,6 +131,7 @@ router.put('/produtos/:id', authMiddleware, async (req, res) => {
 
         res.json({ mensagem: 'Produto atualizado com sucesso!' });
     } catch (error) {
+        console.error('Erro na atualização de produto:', error);
         res.status(500).json({ erro: 'Erro ao atualizar produto', detalhe: error.message });
     }
 });
