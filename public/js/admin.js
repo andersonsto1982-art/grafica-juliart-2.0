@@ -6,6 +6,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const formEditarProduto = document.getElementById('form-editar-produto');
     const listaProdutos = document.getElementById('lista-admin-produtos');
 
+    // Função para pegar o token de autenticação salvo
+    function getToken() {
+        return localStorage.getItem('juliart_token');
+    }
+
+    // Função auxiliar para requisições autenticadas
+    function getAuthHeaders() {
+        const token = getToken();
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+        };
+    }
+
     window.toggleModal = (modalId) => {
         const modal = document.getElementById(modalId);
         if (modal) {
@@ -13,7 +27,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Autenticação de Usuário
+    // Verificar se já existe sessão salva ao carregar a página
+    if (getToken()) {
+        if (loginSection) loginSection.style.display = 'none';
+        if (dashboardSection) dashboardSection.style.display = 'block';
+        carregarProdutosAdmin();
+    }
+
+    // Autenticação de Usuário (Login)
     if (formLogin) {
         formLogin.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -27,25 +48,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ email, senha })
                 });
 
-                const textData = await res.text();
-                let data = {};
-                try { data = JSON.parse(textData); } catch (jsonErr) {}
+                const data = await res.json().catch(() => ({}));
 
-                if (res.ok) {
+                if (res.ok && data.token) {
+                    // Salva o token JWT no navegador
+                    localStorage.setItem('juliart_token', data.token);
                     loginSection.style.display = 'none';
                     dashboardSection.style.display = 'block';
                     carregarProdutosAdmin();
                 } else {
-                    alert(data.detalhe || data.erro || `Erro (${res.status}): Não foi possível autenticar.`);
+                    alert(data.detalhe || data.erro || 'Falha ao autenticar.');
                 }
             } catch (err) {
-                console.error('Erro detalhado no fetch:', err);
-                alert('Erro de conexão com o servidor. Verifique o console (F12).');
+                console.error('Erro no login:', err);
+                alert('Erro de conexão com o servidor.');
             }
         });
     }
 
-    // Cadastro de produto (via JSON)
+    // Cadastrar produto (com JWT)
     if (formProduto) {
         formProduto.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -55,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const res = await fetch('/api/admin/produtos', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(payload)
                 });
 
@@ -65,8 +86,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('✅ Produto cadastrado com sucesso!');
                     formProduto.reset();
                     carregarProdutosAdmin();
+                } else if (res.status === 401 || res.status === 403) {
+                    alert('Sessão expirada. Faça login novamente.');
+                    localStorage.removeItem('juliart_token');
+                    location.reload();
                 } else {
-                    alert(data.detalhe || data.erro || `Erro (${res.status}): Falha ao cadastrar produto.`);
+                    alert(data.detalhe || data.erro || 'Falha ao cadastrar produto.');
                 }
             } catch (err) {
                 console.error('Erro ao cadastrar produto:', err);
@@ -75,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Edição de produto
+    // Editar produto (com JWT)
     if (formEditarProduto) {
         formEditarProduto.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -92,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const res = await fetch(`/api/admin/produtos/${id}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(dadosAtualizados)
                 });
 
@@ -102,12 +127,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('✅ Produto atualizado com sucesso!');
                     toggleModal('modal-editar-produto');
                     carregarProdutosAdmin();
+                } else if (res.status === 401 || res.status === 403) {
+                    alert('Sessão expirada. Faça login novamente.');
+                    localStorage.removeItem('juliart_token');
+                    location.reload();
                 } else {
-                    alert(data.detalhe || data.erro || 'Erro ao atualizar produto');
+                    alert(data.detalhe || data.erro || 'Erro ao atualizar produto.');
                 }
             } catch (err) {
                 console.error('Erro ao atualizar produto:', err);
-                alert('Erro de conexão ao atualizar produto');
+                alert('Erro de conexão ao atualizar produto.');
             }
         });
     }
@@ -161,13 +190,21 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleModal('modal-editar-produto');
     };
 
-    // Excluir produto
+    // Excluir produto (com JWT)
     window.excluirProduto = async (id) => {
         if (confirm('Tem certeza que deseja excluir este item?')) {
             try {
-                const res = await fetch(`/api/admin/produtos/${id}`, { method: 'DELETE' });
+                const res = await fetch(`/api/admin/produtos/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                
                 if (res.ok) {
                     carregarProdutosAdmin();
+                } else if (res.status === 401 || res.status === 403) {
+                    alert('Sessão expirada. Faça login novamente.');
+                    localStorage.removeItem('juliart_token');
+                    location.reload();
                 } else {
                     const data = await res.json().catch(() => ({}));
                     alert(data.detalhe || data.erro || 'Erro ao excluir produto.');

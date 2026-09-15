@@ -1,14 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const authMiddleware = require('../middleware/auth');
 
-// Login do Administrador
+// Login do Administrador (Gera o JWT)
 router.post('/login', async (req, res) => {
     try {
         const { email, senha } = req.body;
 
         if (!email || !senha) {
-            return res.status(400).json({ erro: 'E-mail e senha são obrigatórios' });
+            return res.status(400).json({ erro: 'E-mail e senha são obrigatórios.' });
         }
 
         const emailLimpo = email.trim();
@@ -17,28 +20,54 @@ router.post('/login', async (req, res) => {
         const [rows] = await pool.query('SELECT * FROM gj_usuarios WHERE email = ?', [emailLimpo]);
 
         if (rows.length === 0) {
-            return res.status(401).json({ erro: 'E-mail ou senha incorretos' });
+            return res.status(401).json({ erro: 'E-mail ou senha incorretos.' });
         }
 
         const usuario = rows[0];
 
-        if (String(usuario.senha).trim() !== senhaLimpa) {
-            return res.status(401).json({ erro: 'E-mail ou senha incorretos' });
+        // Verifica se a senha salva é um hash bcrypt ou texto simples (compatibilidade)
+        let senhaValida = false;
+        if (usuario.senha.startsWith('$2a$') || usuario.senha.startsWith('$2b$')) {
+            senhaValida = await bcrypt.compare(senhaLimpa, usuario.senha);
+        } else {
+            senhaValida = String(usuario.senha).trim() === senhaLimpa;
         }
 
-        res.json({ mensagem: 'Login realizado com sucesso', usuario: usuario.nome });
+        if (!senhaValida) {
+            return res.status(401).json({ erro: 'E-mail ou senha incorretos.' });
+        }
+
+        // Se a senha ainda estiver em texto puro no banco, atualiza para bcrypt automaticamente
+        if (!usuario.senha.startsWith('$2a$') && !usuario.senha.startsWith('$2b$')) {
+            const hashSenha = await bcrypt.hash(senhaLimpa, 10);
+            await pool.query('UPDATE gj_usuarios SET senha = ? WHERE id = ?', [hashSenha, usuario.id]);
+        }
+
+        // Gera o Token JWT com validade de 8 horas
+        const secret = process.env.JWT_SECRET || 'chave_secreta_padrao_juliart';
+        const token = jwt.sign(
+            { id: usuario.id, email: usuario.email, nome: usuario.nome },
+            secret,
+            { expiresIn: '8h' }
+        );
+
+        res.json({
+            mensagem: 'Login realizado com sucesso',
+            usuario: usuario.nome,
+            token
+        });
     } catch (error) {
-        console.error('Erro detalhado no login:', error);
+        console.error('Erro no login:', error);
         res.status(500).json({ erro: 'Erro ao autenticar no banco de dados', detalhe: error.message });
     }
 });
 
-// Cadastrar Novo Produto
-router.post('/produtos', async (req, res) => {
+// Cadastrar Novo Produto (PROTEGIDO)
+router.post('/produtos', authMiddleware, async (req, res) => {
     try {
         const { nome, descricao, preco, categoria_id, destaque, imagem } = req.body;
         
-        const imagemUrl = imagem && imagem.trim() !== '' ? imagem.trim() : 'images/placeholder.jpg';
+        const imagemUrl = imagem && imagem.trim() !== '' ? imagem.trim() : '/images/placeholder.jpg';
         const isDestaque = destaque === 'true' || destaque === '1' || destaque === true ? 1 : 0;
         const catId = categoria_id && categoria_id !== '' ? categoria_id : null;
 
@@ -54,13 +83,13 @@ router.post('/produtos', async (req, res) => {
     }
 });
 
-// Buscar um Produto Específico por ID
+// Buscar Produto Específico por ID (Público)
 router.get('/produtos/:id', async (req, res) => {
     try {
         const [rows] = await pool.query('SELECT * FROM gj_produtos WHERE id = ?', [req.params.id]);
 
         if (rows.length === 0) {
-            return res.status(404).json({ erro: 'Produto não encontrado' });
+            return res.status(404).json({ erro: 'Produto não encontrado.' });
         }
 
         res.json(rows[0]);
@@ -69,8 +98,8 @@ router.get('/produtos/:id', async (req, res) => {
     }
 });
 
-// Atualizar Produto Existente
-router.put('/produtos/:id', async (req, res) => {
+// Atualizar Produto Existente (PROTEGIDO)
+router.put('/produtos/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         const { nome, descricao, preco, categoria_id, destaque, imagem } = req.body;
@@ -78,7 +107,7 @@ router.put('/produtos/:id', async (req, res) => {
         const [produtoExistente] = await pool.query('SELECT * FROM gj_produtos WHERE id = ?', [id]);
 
         if (produtoExistente.length === 0) {
-            return res.status(404).json({ erro: 'Produto não encontrado para edição' });
+            return res.status(404).json({ erro: 'Produto não encontrado para edição.' });
         }
 
         const produtoAtual = produtoExistente[0];
@@ -108,13 +137,13 @@ router.put('/produtos/:id', async (req, res) => {
     }
 });
 
-// Excluir Produto
-router.delete('/produtos/:id', async (req, res) => {
+// Excluir Produto (PROTEGIDO)
+router.delete('/produtos/:id', authMiddleware, async (req, res) => {
     try {
         const [result] = await pool.query('DELETE FROM gj_produtos WHERE id = ?', [req.params.id]);
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({ erro: 'Produto não encontrado' });
+            return res.status(404).json({ erro: 'Produto não encontrado.' });
         }
 
         res.json({ mensagem: 'Produto excluído com sucesso!' });
