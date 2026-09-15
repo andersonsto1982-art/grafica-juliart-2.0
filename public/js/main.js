@@ -14,7 +14,7 @@ function obterUrlImagem(imagem) {
     if (imagem.startsWith('http://') || imagem.startsWith('https://')) {
         return imagem;
     }
-    // Garante que o caminho comece com / e remove duplicações de barra
+    // Garante que o caminho comece com /
     return imagem.startsWith('/') ? imagem : `/${imagem}`;
 }
 
@@ -154,15 +154,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Carregar destaques do banner
     async function carregarDestaques() {
         try {
             const response = await fetch('/api/produtos/destaques');
-            if (!response.ok) return;
+            
+            // Verifica se a resposta HTTP é OK e se o conteúdo é JSON
+            const contentType = response.headers.get('content-type');
+            if (!response.ok || !contentType || !contentType.includes('application/json')) {
+                console.warn('API de destaques não retornou JSON válido:', response.status);
+                return;
+            }
 
             const destaques = await response.json();
             const wrapper = document.getElementById('banner-destaques-wrapper');
 
-            if (!wrapper || destaques.length === 0) return;
+            if (!wrapper || !Array.isArray(destaques) || destaques.length === 0) return;
 
             wrapper.innerHTML = '';
 
@@ -203,5 +210,58 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Carregar produtos da vitrine geral
+    async function carregarProdutosGerais() {
+        try {
+            const response = await fetch('/api/produtos');
+            
+            const contentType = response.headers.get('content-type');
+            if (!response.ok || !contentType || !contentType.includes('application/json')) {
+                console.warn('API de produtos não retornou JSON válido:', response.status);
+                return;
+            }
+
+            const produtos = await response.json();
+            const container = document.getElementById('produtos-container');
+
+            if (!container || !Array.isArray(produtos) || produtos.length === 0) return;
+
+            container.innerHTML = '';
+
+            produtos.forEach(prod => {
+                const card = document.createElement('div');
+                card.classList.add('product-card');
+
+                const imagemUrl = obterUrlImagem(prod.imagem);
+                const precoFormatado = Number(prod.preco).toLocaleString('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                });
+
+                card.innerHTML = `
+                    <img src="${imagemUrl}" alt="${prod.nome}" class="product-img" onerror="this.src='/images/placeholder.jpg'" />
+                    <div class="product-info">
+                        <h3>${prod.nome}</h3>
+                        <p>${prod.descricao || ''}</p>
+                        <span class="product-price">${precoFormatado}</span>
+                        <button class="btn-pink btn-add-cart">
+                            <i class="fa-solid fa-cart-shopping"></i> Adicionar
+                        </button>
+                    </div>
+                `;
+
+                const btnAdd = card.querySelector('.btn-add-cart');
+                if (btnAdd) {
+                    btnAdd.addEventListener('click', () => adicionarAoCarrinho(prod));
+                }
+
+                container.appendChild(card);
+            });
+        } catch (error) {
+            console.error('Erro ao carregar catálogo de produtos:', error);
+        }
+    }
+
     carregarDestaques();
+    carregarProdutosGerais();
 });
