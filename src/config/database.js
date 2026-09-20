@@ -7,24 +7,11 @@ const pool = mysql.createPool({
     database: process.env.DB_NAME,
     port: process.env.DB_PORT || 28581,
     ssl: {
-        rejectUnauthorized: false // OBRIGATÓRIO para Aiven/Vercel
+        rejectUnauthorized: false
     },
     waitForConnections: true,
-    connectionLimit: 10,
+    connectionLimit: 5, // Reduzido para evitar estourar o limite de conexões simultâneas do Aiven na Vercel
     queueLimit: 0
 });
-
-// Testar conexão
-async function testConnection() {
-    try {
-        const connection = await pool.getConnection();
-        console.log('✅ Conexão com o banco de dados MySQL realizada com sucesso!');
-        connection.release();
-    } catch (error) {
-        console.error('❌ Erro ao conectar no MySQL:', error.message);
-    }
-}
-
-testConnection();
 
 module.exports = pool;
