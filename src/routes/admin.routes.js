@@ -7,7 +7,7 @@ const multer = require('multer');
 const https = require('https');
 const authMiddleware = require('../middleware/auth');
 
-// Configuração do Multer (armazenamento em memória temporária)
+// Configuração do Multer (armazenamento temporário em memória)
 const upload = multer({ storage: multer.memoryStorage() });
 
 // Login do Administrador
@@ -42,17 +42,13 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// Rota de Upload de Imagem para o ImgBB (PROTEGIDA - Módulo HTTPS Nativo)
+// Upload para ImgBB
 router.post('/upload', authMiddleware, upload.single('imagemFile'), async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({ erro: 'Nenhum arquivo enviado.' });
-        }
+        if (!req.file) return res.status(400).json({ erro: 'Nenhum arquivo enviado.' });
 
         const apiKey = process.env.IMGBB_API_KEY;
-        if (!apiKey) {
-            return res.status(500).json({ erro: 'Chave da API do ImgBB não configurada no servidor.' });
-        }
+        if (!apiKey) return res.status(500).json({ erro: 'Chave IMGBB_API_KEY não configurada na Vercel.' });
 
         const base64Image = req.file.buffer.toString('base64');
         const postData = new URLSearchParams({ image: base64Image }).toString();
@@ -69,18 +65,14 @@ router.post('/upload', authMiddleware, upload.single('imagemFile'), async (req, 
 
         const imgbbReq = https.request(options, (imgbbRes) => {
             let data = '';
-
-            imgbbRes.on('data', (chunk) => {
-                data += chunk;
-            });
-
+            imgbbRes.on('data', (chunk) => data += chunk);
             imgbbRes.on('end', () => {
                 try {
                     const json = JSON.parse(data);
                     if (json.success) {
                         return res.json({ url: json.data.url });
                     } else {
-                        return res.status(500).json({ erro: 'Erro no envio para o ImgBB', detalhe: json });
+                        return res.status(500).json({ erro: 'Erro no envio para ImgBB', detalhe: json });
                     }
                 } catch (e) {
                     return res.status(500).json({ erro: 'Resposta inválida do ImgBB' });
@@ -89,20 +81,17 @@ router.post('/upload', authMiddleware, upload.single('imagemFile'), async (req, 
         });
 
         imgbbReq.on('error', (err) => {
-            console.error('Erro na requisição para ImgBB:', err);
-            return res.status(500).json({ erro: 'Falha na comunicação com ImgBB', detalhe: err.message });
+            res.status(500).json({ erro: 'Falha de conexão com ImgBB', detalhe: err.message });
         });
 
         imgbbReq.write(postData);
         imgbbReq.end();
-
     } catch (error) {
-        console.error('Erro no upload de imagem:', error);
         res.status(500).json({ erro: 'Erro ao processar imagem', detalhe: error.message });
     }
 });
 
-// Cadastrar Produto (PROTEGIDO)
+// Cadastrar Produto
 router.post('/produtos', authMiddleware, async (req, res) => {
     try {
         const { nome, descricao, preco, categoria_id, destaque, imagem } = req.body;
@@ -113,7 +102,7 @@ router.post('/produtos', authMiddleware, async (req, res) => {
 
         const precoNum = parseFloat(preco);
         const imagemUrl = imagem && String(imagem).trim() !== '' ? String(imagem).trim() : '/images/placeholder.jpg';
-        const isDestaque = destaque === 'true' || destaque === '1' || destaque === 1 || destaque === true ? 1 : 0;
+        const isDestaque = (destaque === 'true' || destaque === '1' || destaque === 1 || destaque === true) ? 1 : 0;
         const catId = categoria_id && categoria_id !== '' ? parseInt(categoria_id, 10) : null;
 
         const [result] = await pool.query(
@@ -123,12 +112,11 @@ router.post('/produtos', authMiddleware, async (req, res) => {
 
         res.status(201).json({ mensagem: 'Produto cadastrado com sucesso!', id: result.insertId });
     } catch (error) {
-        console.error('Erro no cadastro de produto:', error);
         res.status(500).json({ erro: 'Erro ao cadastrar produto', detalhe: error.message });
     }
 });
 
-// Atualizar Produto (PROTEGIDO)
+// Atualizar Produto
 router.put('/produtos/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
@@ -138,31 +126,26 @@ router.put('/produtos/:id', authMiddleware, async (req, res) => {
         if (produtoExistente.length === 0) return res.status(404).json({ erro: 'Produto não encontrado.' });
 
         const produtoAtual = produtoExistente[0];
-        
+
         const novoNome = nome !== undefined && String(nome).trim() !== '' ? String(nome).trim() : produtoAtual.nome;
         const novaDescricao = descricao !== undefined ? descricao : produtoAtual.descricao;
         const novoPreco = preco !== undefined && preco !== '' ? parseFloat(preco) : produtoAtual.preco;
         const novaCategoria = categoria_id !== undefined && categoria_id !== '' ? parseInt(categoria_id, 10) : produtoAtual.categoria_id;
         const novaImagem = imagem !== undefined && String(imagem).trim() !== '' ? String(imagem).trim() : produtoAtual.imagem;
-        
-        let novoDestaque = produtoAtual.destaque;
-        if (destaque !== undefined) {
-            novoDestaque = (destaque === 'true' || destaque === '1' || destaque === 1 || destaque === true) ? 1 : 0;
-        }
+        const novoDestaque = destaque !== undefined ? ((destaque === 'true' || destaque === '1' || destaque === 1 || destaque === true) ? 1 : 0) : produtoAtual.destaque;
 
         await pool.query(
-            `UPDATE gj_produtos SET nome = ?, descricao = ?, preco = ?, imagem = ?, categoria_id = ?, destaque = ? WHERE id = ?`,
+            'UPDATE gj_produtos SET nome = ?, descricao = ?, preco = ?, imagem = ?, categoria_id = ?, destaque = ? WHERE id = ?',
             [novoNome, novaDescricao, novoPreco, novaImagem, novaCategoria, novoDestaque, id]
         );
 
         res.json({ mensagem: 'Produto atualizado com sucesso!' });
     } catch (error) {
-        console.error('Erro na atualização de produto:', error);
         res.status(500).json({ erro: 'Erro ao atualizar produto', detalhe: error.message });
     }
 });
 
-// Excluir Produto (PROTEGIDO)
+// Excluir Produto
 router.delete('/produtos/:id', authMiddleware, async (req, res) => {
     try {
         const [result] = await pool.query('DELETE FROM gj_produtos WHERE id = ?', [req.params.id]);
