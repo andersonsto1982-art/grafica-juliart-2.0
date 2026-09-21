@@ -17,24 +17,24 @@ const produtosRoutes = require('./src/routes/produtos.routes');
 app.use('/api/admin', adminRoutes);
 app.use('/api/produtos', produtosRoutes);
 
-// Servir arquivos estáticos da pasta public
+// Servir arquivos estáticos (CSS, JS, Imagens da pasta public)
 const publicDir = path.join(process.cwd(), 'public');
 if (fs.existsSync(publicDir)) {
     app.use(express.static(publicDir));
 }
 
-// Rota de fallback para SPA/index.html
+// Rota para qualquer outra página HTML (Fallback para index.html)
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api/')) {
         return res.status(404).json({ erro: 'Rota de API não encontrada' });
     }
-    
+
     const indexPath = path.join(process.cwd(), 'public', 'index.html');
     if (fs.existsSync(indexPath)) {
         return res.sendFile(indexPath);
     }
-    
-    return res.status(404).send('Página não encontrada');
+
+    return res.status(404).send('Página pública não encontrada.');
 });
 
 // Middleware global de tratamento de erros
