@@ -19,7 +19,7 @@ router.get('/destaques', async (req, res) => {
     }
 });
 
-// 2. Buscar todos os produtos (com filtros opcionais: ?categoria=itens-personalizados ou ?destaque=true)
+// 2. Buscar todos os produtos (com filtros opcionais)
 router.get('/', async (req, res) => {
     try {
         const { categoria, destaque } = req.query;
@@ -53,7 +53,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-// 3. Buscar um único produto por ID (incluindo informações da categoria)
+// 3. Buscar um único produto por ID
 router.get('/:id', async (req, res) => {
     try {
         const query = `
@@ -73,10 +73,6 @@ router.get('/:id', async (req, res) => {
         res.status(500).json({ erro: 'Erro ao buscar produto', detalhe: error.message });
     }
 });
-
-// -------------------------------------------------------------
-// NOVAS ROTAS: Criar, Atualizar e Deletar Produtos
-// -------------------------------------------------------------
 
 // 4. Cadastrar um novo produto
 router.post('/', async (req, res) => {
@@ -116,7 +112,6 @@ router.put('/:id', async (req, res) => {
         const { id } = req.params;
         const { nome, descricao, preco, imagem, categoria_id, destaque } = req.body;
 
-        // Verifica se o produto existe
         const [produtoExistente] = await pool.query('SELECT * FROM gj_produtos WHERE id = ?', [id]);
         if (produtoExistente.length === 0) {
             return res.status(404).json({ mensagem: 'Produto não encontrado para edição' });
