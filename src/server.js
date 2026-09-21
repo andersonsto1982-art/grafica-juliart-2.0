@@ -10,20 +10,20 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Roteamento de APIs
+// Rotas de API
 const adminRoutes = require('./src/routes/admin.routes');
 const produtosRoutes = require('./src/routes/produtos.routes');
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/produtos', produtosRoutes);
 
-// Servir arquivos estáticos (CSS, JS, Imagens da pasta public)
+// Servir arquivos estáticos da pasta public (index.html, admin.html, css, js)
 const publicDir = path.join(process.cwd(), 'public');
 if (fs.existsSync(publicDir)) {
     app.use(express.static(publicDir));
 }
 
-// Rota para qualquer outra página HTML (Fallback para index.html)
+// Fallback para SPA / Navegação
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api/')) {
         return res.status(404).json({ erro: 'Rota de API não encontrada' });
@@ -34,10 +34,10 @@ app.get('*', (req, res) => {
         return res.sendFile(indexPath);
     }
 
-    return res.status(404).send('Página pública não encontrada.');
+    return res.status(404).send('Página não encontrada.');
 });
 
-// Middleware global de tratamento de erros
+// Middleware global de erros
 app.use((err, req, res, next) => {
     console.error('Erro interno do servidor:', err);
     res.status(500).json({ erro: 'Erro interno no servidor', detalhe: err.message });
