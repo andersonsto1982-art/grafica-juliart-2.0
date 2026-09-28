@@ -1,5 +1,4 @@
 // Função de Login do Administrador
-// Exemplo da função de login no front-end
 async function realizarLogin(event) {
     event.preventDefault();
 
@@ -7,9 +6,8 @@ async function realizarLogin(event) {
     const senhaInput = document.getElementById('senha').value;
 
     try {
-        // USE CAMINHO RELATIVO '/api/admin/login' OU '/src/routes/admin/login'
-        // Evite colocar 'http://localhost:3000' fixo no código!
-        const response = await fetch('/admin/login', { // ou a rota exata definida no seu server.js
+        // Alinhado com a rota /api/admin/login
+        const response = await fetch('/api/admin/login', { 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -23,11 +21,8 @@ async function realizarLogin(event) {
         const data = await response.json();
 
         if (response.ok) {
-            // 1. Salva o token retornado pelo backend
             localStorage.setItem('adminToken', data.token);
-            
-            // 2. Redireciona para o painel principal
-            window.location.href = '/admin-dashboard.html'; // ajuste para a sua página de painel
+            window.location.href = '/admin-dashboard.html';
         } else {
             alert(data.erro || data.mensagem || 'Falha no login');
         }
@@ -39,18 +34,16 @@ async function realizarLogin(event) {
 
 // Função de Cadastrar Produto
 async function cadastrarProduto(dadosProduto) {
-    // 1. Recupera o token salvo no login
     const token = localStorage.getItem('adminToken');
 
     if (!token) {
         alert('Sessão expirada ou não autenticada. Faça login novamente.');
-        window.location.href = '/login.html'; // Redireciona caso o token não exista
+        window.location.href = '/login.html';
         return;
     }
 
     let urlImagemFinal = '/images/placeholder.jpg';
 
-    // 2. Upload da imagem para o ImgBB (se houver arquivo selecionado)
     if (dadosProduto.arquivoImagem) {
         const formData = new FormData();
         formData.append('imagemFile', dadosProduto.arquivoImagem);
@@ -78,11 +71,9 @@ async function cadastrarProduto(dadosProduto) {
             return;
         }
     } else if (dadosProduto.imagemUrl) {
-        // Permite usar URL direta caso o usuário cole o link de uma imagem
         urlImagemFinal = dadosProduto.imagemUrl;
     }
 
-    // 3. Formatação dos dados para garantir tipos compatíveis com o MySQL
     const payload = {
         nome: dadosProduto.nome ? dadosProduto.nome.trim() : '',
         descricao: dadosProduto.descricao ? dadosProduto.descricao.trim() : '',
@@ -92,7 +83,6 @@ async function cadastrarProduto(dadosProduto) {
         imagem: urlImagemFinal
     };
 
-    // 4. Envio do cadastro de produto
     try {
         const response = await fetch('/api/admin/produtos', {
             method: 'POST',
@@ -107,7 +97,6 @@ async function cadastrarProduto(dadosProduto) {
 
         if (response.ok) {
             alert('Produto cadastrado com sucesso!');
-            // Opcional: limpar formulário ou recarregar lista
         } else {
             alert('Erro ao cadastrar produto: ' + (data.erro || data.detalhe || 'Erro desconhecido'));
         }
