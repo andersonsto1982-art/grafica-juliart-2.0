@@ -46,17 +46,11 @@
         <!-- TELA DE LOGIN -->
         <div id="login-section" class="admin-container">
             <h2><i class="fa-solid fa-lock"></i> Login do Administrador</h2>
-            <form id="form-login">
-                <div class="form-group">
-                    <label>E-mail:</label>
-                    <input type="email" id="login-email" required placeholder="admin@juliart.com">
-                </div>
-                <div class="form-group">
-                    <label>Senha:</label>
-                    <input type="password" id="login-senha" required placeholder="admin123">
-                </div>
-                <button type="submit" class="btn-pink" style="width: 100%;">Entrar no Painel</button>
-            </form>
+            <form onsubmit="realizarLogin(event)">
+    <input type="text" id="usuario" placeholder="Utilizador" required>
+    <input type="password" id="senha" placeholder="Palavra-passe" required>
+    <button type="submit">Entrar</button>
+</form>
         </div>
 
         <!-- PAINEL DE CADASTRO -->
