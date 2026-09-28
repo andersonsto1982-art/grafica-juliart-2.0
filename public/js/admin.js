@@ -1,34 +1,46 @@
 // Função de Login do Administrador
-async function loginAdmin(email, senha) {
+// Exemplo da função de login no front-end
+async function realizarLogin(event) {
+    event.preventDefault();
+
+    const usuarioInput = document.getElementById('usuario').value;
+    const senhaInput = document.getElementById('senha').value;
+
     try {
-        const response = await fetch('/api/admin/login', {
+        // USE CAMINHO RELATIVO '/api/admin/login' OU '/src/routes/admin/login'
+        // Evite colocar 'http://localhost:3000' fixo no código!
+        const response = await fetch('/admin/login', { // ou a rota exata definida no seu server.js
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ email, senha })
+            body: JSON.stringify({ 
+                usuario: usuarioInput, 
+                senha: senhaInput 
+            })
         });
 
         const data = await response.json();
 
         if (response.ok) {
-            // Salva o token com o nome padronizado 'token'
-            localStorage.setItem('token', data.token);
-            alert('Login realizado com sucesso!');
-            window.location.href = '/admin-dashboard.html'; // Altere para a sua página de painel
+            // 1. Salva o token retornado pelo backend
+            localStorage.setItem('adminToken', data.token);
+            
+            // 2. Redireciona para o painel principal
+            window.location.href = '/admin-dashboard.html'; // ajuste para a sua página de painel
         } else {
-            alert('Falha no login: ' + (data.erro || 'Verifique e-mail e senha.'));
+            alert(data.erro || data.mensagem || 'Falha no login');
         }
     } catch (error) {
-        console.error('Erro na requisição de login:', error);
-        alert('Erro ao conectar com o servidor.');
+        console.error('Erro ao conectar com o servidor:', error);
+        alert('Erro ao tentar conectar com o servidor.');
     }
 }
 
 // Função de Cadastrar Produto
 async function cadastrarProduto(dadosProduto) {
     // 1. Recupera o token salvo no login
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('adminToken');
 
     if (!token) {
         alert('Sessão expirada ou não autenticada. Faça login novamente.');
