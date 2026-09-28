@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require('express'); // <-- REMOVA O "//" DESTA LINHA!
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
@@ -7,7 +7,7 @@ require('dotenv').config();
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); // Permite receber o req.body do login
 app.use(express.urlencoded({ extended: true }));
 
 // Rotas de API
@@ -17,13 +17,13 @@ const produtosRoutes = require('./src/routes/produtos.routes');
 app.use('/api/admin', adminRoutes);
 app.use('/api/produtos', produtosRoutes);
 
-// Servir arquivos estáticos (CSS, JS, imagens, admin.html) da pasta public
+// Servir arquivos estáticos da pasta public
 const publicPath = path.join(process.cwd(), 'public');
 if (fs.existsSync(publicPath)) {
     app.use(express.static(publicPath));
 }
 
-// Fallback: Retorna index.html para requisições de páginas
+// Fallback para páginas
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api/')) {
         return res.status(404).json({ erro: 'Rota de API não encontrada' });
