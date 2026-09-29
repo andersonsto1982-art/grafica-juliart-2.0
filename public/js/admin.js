@@ -2,33 +2,30 @@
 async function realizarLogin(event) {
     event.preventDefault();
 
-    const usuarioInput = document.getElementById('usuario').value;
-    const senhaInput = document.getElementById('senha').value;
+    const usuario = document.getElementById('usuario').value;
+    const senha = document.getElementById('senha').value;
 
     try {
-        // Alinhado com a rota /api/admin/login
-        const response = await fetch('/api/admin/login', { 
+        const response = await fetch('/api/admin/login', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ 
-                usuario: usuarioInput, 
-                senha: senhaInput 
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuario, senha })
         });
 
         const data = await response.json();
 
         if (response.ok) {
+            // 1. Salva o Token gerado pelo backend no navegador
             localStorage.setItem('adminToken', data.token);
-            window.location.href = '/admin-dashboard.html';
+
+            // 2. Redireciona para a página do painel administrativo
+            window.location.href = '/admin-painel.html'; // Ajuste o nome da sua página de painel aqui
         } else {
-            alert(data.erro || data.mensagem || 'Falha no login');
+            alert(data.erro || 'Falha no login');
         }
     } catch (error) {
-        console.error('Erro ao conectar com o servidor:', error);
-        alert('Erro ao tentar conectar com o servidor.');
+        console.error('Erro de conexão:', error);
+        alert('Erro ao conectar com o servidor');
     }
 }
 
