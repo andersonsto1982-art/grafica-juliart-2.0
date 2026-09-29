@@ -40,9 +40,14 @@ router.post('/login', async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ erro: 'Erro interno no servidor ao realizar login', detalhe: error.message });
-    }
+    console.error('Erro na rota de login:', error);
+    // Retorna o erro exato retornado pelo driver do MySQL
+    res.status(500).json({ 
+        erro: 'Erro interno no servidor ao realizar login', 
+        detalhe: error.message,
+        codigo: error.code || 'SEM_CODIGO'
+    });
+}
 });
 
 module.exports = router;
