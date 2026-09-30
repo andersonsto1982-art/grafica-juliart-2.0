@@ -1,6 +1,7 @@
 let carrinho = [];
 const NUMERO_WHATSAPP = '558191427836';
 
+// Alterna visibilidade de modais
 function toggleModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -8,7 +9,7 @@ function toggleModal(modalId) {
     }
 }
 
-// Tratamento aprimorado da URL da imagem
+// Tratamento de URL para exibição de imagens
 function obterUrlImagem(imagem) {
     if (!imagem) return '/images/placeholder.jpg';
     if (imagem.startsWith('http://') || imagem.startsWith('https://')) {
@@ -17,6 +18,7 @@ function obterUrlImagem(imagem) {
     return imagem.startsWith('/') ? imagem : `/${imagem}`;
 }
 
+// Atualização da Interface do Carrinho
 function atualizarCarrinhoUI() {
     const badge = document.getElementById('carrinho-qtd-badge');
     const lista = document.getElementById('carrinho-lista-itens');
@@ -59,6 +61,7 @@ function atualizarCarrinhoUI() {
     });
 }
 
+// Notificação Toast rápida
 function mostrarToast(mensagem) {
     let container = document.getElementById('toast-container');
     if (!container) {
@@ -78,6 +81,7 @@ function mostrarToast(mensagem) {
     }, 3000);
 }
 
+// Adicionar produto ao carrinho
 function adicionarAoCarrinho(produto) {
     carrinho.push(produto);
     atualizarCarrinhoUI();
@@ -91,11 +95,13 @@ function adicionarAoCarrinho(produto) {
     }
 }
 
+// Remover produto do carrinho
 function removerDoCarrinho(index) {
     carrinho.splice(index, 1);
     atualizarCarrinhoUI();
 }
 
+// Limpar todo o carrinho
 function limparCarrinho() {
     if (carrinho.length === 0) return;
     if (confirm('Deseja realmente limpar todos os itens do carrinho?')) {
@@ -104,6 +110,7 @@ function limparCarrinho() {
     }
 }
 
+// Enviar pedido via WhatsApp
 function finalizarPedidoWhatsApp() {
     if (carrinho.length === 0) {
         alert('Seu carrinho está vazio! Adicione alguns produtos antes de finalizar.');
@@ -126,9 +133,57 @@ function finalizarPedidoWhatsApp() {
     window.open(url, '_blank');
 }
 
+// Função de Login do Administrador
+async function realizarLogin(event) {
+    if (event) event.preventDefault(); // Impede o recarregamento nativo da página
+
+    const usuarioInput = document.getElementById('usuario')?.value;
+    const senhaInput = document.getElementById('senha')?.value;
+
+    if (!usuarioInput || !senhaInput) {
+        alert('Preencha os campos de usuário e senha.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuario: usuarioInput, senha: senhaInput })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.token) {
+            localStorage.setItem('adminToken', data.token);
+
+            // Transição na tela sem recarregar/redirecionar para home
+            const loginSection = document.getElementById('login-section');
+            const dashboardSection = document.getElementById('dashboard-section');
+            const btnLogout = document.getElementById('btn-logout');
+
+            if (loginSection) loginSection.style.display = 'none';
+            if (dashboardSection) dashboardSection.style.display = 'block';
+            if (btnLogout) btnLogout.style.display = 'inline-block';
+        } else {
+            alert(data.erro || data.detalhe || 'Usuário ou senha inválidos.');
+        }
+    } catch (error) {
+        console.error('Erro na autenticação:', error);
+        alert('Erro ao tentar conectar com o servidor.');
+    }
+}
+
+// Logout do Administrador
+function fazerLogout() {
+    localStorage.removeItem('adminToken');
+    window.location.reload();
+}
+
+// Execução ao carregar a página
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Verificação de sessão (APENAS se estiver na página admin.html)
-    if (window.location.pathname.includes('admin.html')) {
+    // 1. Verificação da Sessão Administrativa (apenas na página admin)
+    if (window.location.pathname.includes('admin')) {
         const token = localStorage.getItem('adminToken');
         const loginSection = document.getElementById('login-section');
         const dashboardSection = document.getElementById('dashboard-section');
@@ -143,9 +198,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (dashboardSection) dashboardSection.style.display = 'none';
             if (btnLogout) btnLogout.style.display = 'none';
         }
+
+        const formLogin = document.getElementById('form-login');
+        if (formLogin) {
+            formLogin.addEventListener('submit', realizarLogin);
+        }
     }
 
-    // 2. Inicialização dos componentes da loja
+    // 2. Inicialização dos Recursos Públicos da Loja
     atualizarCarrinhoUI();
 
     const btnAbrirPrecos = document.getElementById('btn-abrir-precos');
@@ -154,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnAbrirPrecos) btnAbrirPrecos.addEventListener('click', () => toggleModal('modal-precos'));
     if (btnFecharPrecos) btnFecharPrecos.addEventListener('click', () => toggleModal('modal-precos'));
 
-    // Filtro de Busca em Tempo Real
+    // Filtro de Busca de Produtos
     const inputBusca = document.getElementById('input-busca-produto');
     if (inputBusca) {
         inputBusca.addEventListener('input', (e) => {
@@ -172,16 +232,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Carregar destaques do banner
+    // Buscar Produtos em Destaque
     async function carregarDestaques() {
         try {
             const response = await fetch('/api/produtos/destaques');
-            
             const contentType = response.headers.get('content-type');
-            if (!response.ok || !contentType || !contentType.includes('application/json')) {
-                console.warn('API de destaques não retornou JSON válido:', response.status);
-                return;
-            }
+            
+            if (!response.ok || !contentType || !contentType.includes('application/json')) return;
 
             const destaques = await response.json();
             const wrapper = document.getElementById('banner-destaques-wrapper');
@@ -223,20 +280,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 wrapper.appendChild(slide);
             });
         } catch (error) {
-            console.error('Erro ao carregar produtos em destaque:', error);
+            console.error('Erro ao carregar destaques:', error);
         }
     }
 
-    // Carregar produtos da vitrine geral
+    // Buscar Catálogo Geral de Produtos
     async function carregarProdutosGerais() {
         try {
             const response = await fetch('/api/produtos');
-            
             const contentType = response.headers.get('content-type');
-            if (!response.ok || !contentType || !contentType.includes('application/json')) {
-                console.warn('API de produtos não retornou JSON válido:', response.status);
-                return;
-            }
+
+            if (!response.ok || !contentType || !contentType.includes('application/json')) return;
 
             const produtos = await response.json();
             const container = document.getElementById('produtos-container');

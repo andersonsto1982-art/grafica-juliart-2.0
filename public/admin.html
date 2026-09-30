@@ -44,14 +44,19 @@
 
     <main class="container">
         <!-- TELA DE LOGIN -->
-        <div id="login-section" class="admin-container">
-            <h2><i class="fa-solid fa-lock"></i> Login do Administrador</h2>
-            <form onsubmit="realizarLogin(event)">
-    <input type="text" id="usuario" placeholder="Utilizador" required>
-    <input type="password" id="senha" placeholder="Palavra-passe" required>
-    <button type="submit">Entrar</button>
-</form>
-        </div>
+        <div id="login-section">
+    <h2>Painel do Administrador</h2>
+    <form id="form-login">
+        <input type="text" id="usuario" placeholder="Usuário" required />
+        <input type="password" id="senha" placeholder="Senha" required />
+        <button type="submit">Entrar</button>
+    </form>
+</div>
+
+<div id="dashboard-section" style="display: none;">
+    <h2>Bem-vindo ao Painel!</h2>
+    <button id="btn-logout" onclick="fazerLogout()">Sair</button>
+</div>
 
         <!-- PAINEL DE CADASTRO -->
         <div id="dashboard-section" class="admin-container" style="display: none;">
