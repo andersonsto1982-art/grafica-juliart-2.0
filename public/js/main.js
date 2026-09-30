@@ -14,7 +14,6 @@ function obterUrlImagem(imagem) {
     if (imagem.startsWith('http://') || imagem.startsWith('https://')) {
         return imagem;
     }
-    // Garante que o caminho comece com /
     return imagem.startsWith('/') ? imagem : `/${imagem}`;
 }
 
@@ -128,6 +127,25 @@ function finalizarPedidoWhatsApp() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. Verificação de sessão (APENAS se estiver na página admin.html)
+    if (window.location.pathname.includes('admin.html')) {
+        const token = localStorage.getItem('adminToken');
+        const loginSection = document.getElementById('login-section');
+        const dashboardSection = document.getElementById('dashboard-section');
+        const btnLogout = document.getElementById('btn-logout');
+
+        if (token) {
+            if (loginSection) loginSection.style.display = 'none';
+            if (dashboardSection) dashboardSection.style.display = 'block';
+            if (btnLogout) btnLogout.style.display = 'inline-block';
+        } else {
+            if (loginSection) loginSection.style.display = 'block';
+            if (dashboardSection) dashboardSection.style.display = 'none';
+            if (btnLogout) btnLogout.style.display = 'none';
+        }
+    }
+
+    // 2. Inicialização dos componentes da loja
     atualizarCarrinhoUI();
 
     const btnAbrirPrecos = document.getElementById('btn-abrir-precos');
@@ -159,7 +177,6 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/api/produtos/destaques');
             
-            // Verifica se a resposta HTTP é OK e se o conteúdo é JSON
             const contentType = response.headers.get('content-type');
             if (!response.ok || !contentType || !contentType.includes('application/json')) {
                 console.warn('API de destaques não retornou JSON válido:', response.status);
