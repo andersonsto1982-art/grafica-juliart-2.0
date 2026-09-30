@@ -36,7 +36,7 @@
     <header class="header">
         <div class="logo-container header-admin" style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px;">
             <h1 class="logo-text">Painel <span>Administrativo</span></h1>
-            <button id="btn-logout" class="btn-logout" style="display: none;">
+            <button id="btn-logout" class="btn-logout" onclick="fazerLogout()" style="display: none;">
                 <i class="fa-solid fa-right-from-bracket"></i> Sair do Painel
             </button>
         </div>
@@ -44,21 +44,22 @@
 
     <main class="container">
         <!-- TELA DE LOGIN -->
-        <div id="login-section">
-    <h2>Painel do Administrador</h2>
-    <form id="form-login">
-        <input type="text" id="usuario" placeholder="Usuário" required />
-        <input type="password" id="senha" placeholder="Senha" required />
-        <button type="submit">Entrar</button>
-    </form>
-</div>
+        <div id="login-section" class="admin-container">
+            <h2><i class="fa-solid fa-lock"></i> Acesso Restrito</h2>
+            <form id="form-login">
+                <div class="form-group">
+                    <label for="usuario">Usuário:</label>
+                    <input type="text" id="usuario" name="usuario" placeholder="Digite seu usuário" required />
+                </div>
+                <div class="form-group">
+                    <label for="senha">Senha:</label>
+                    <input type="password" id="senha" name="senha" placeholder="Digite sua senha" required />
+                </div>
+                <button type="submit" id="btn-entrar" class="btn-pink" style="width: 100%; padding: 10px; cursor: pointer;">Entrar</button>
+            </form>
+        </div>
 
-<div id="dashboard-section" style="display: none;">
-    <h2>Bem-vindo ao Painel!</h2>
-    <button id="btn-logout" onclick="fazerLogout()">Sair</button>
-</div>
-
-        <!-- PAINEL DE CADASTRO -->
+        <!-- PAINEL DE CADASTRO (EXIBIDO APÓS O LOGIN) -->
         <div id="dashboard-section" class="admin-container" style="display: none;">
             <h2><i class="fa-solid fa-box-open"></i> Cadastrar Novo Item</h2>
             <form id="form-produto">
@@ -160,6 +161,7 @@
         </div>
     </div>
 
-    <script src="js/admin.js"></script>
+    <!-- Script único da aplicação -->
+    <script src="js/script.js"></script>
 </body>
 </html>

@@ -1,104 +1,87 @@
-// Função de Login do Administrador
+// Função de Login do Administrador com Logs
 async function realizarLogin(event) {
-    event.preventDefault();
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
 
-    const usuario = document.getElementById('usuario').value;
-    const senha = document.getElementById('senha').value;
+    console.log('Tentando realizar login...');
+
+    const usuarioInput = document.getElementById('usuario')?.value?.trim();
+    const senhaInput = document.getElementById('senha')?.value?.trim();
+
+    if (!usuarioInput || !senhaInput) {
+        alert('Por favor, preencha os campos de usuário e senha.');
+        return;
+    }
 
     try {
         const response = await fetch('/api/admin/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ usuario, senha })
+            body: JSON.stringify({ usuario: usuarioInput, senha: senhaInput })
         });
 
+        console.log('Status da resposta:', response.status);
         const data = await response.json();
+        console.log('Resposta do servidor:', data);
 
-        if (response.ok) {
-            // 1. Salva o Token gerado pelo backend no navegador
+        if (response.ok && data.token) {
+            // Salva o token
             localStorage.setItem('adminToken', data.token);
 
-            // 2. Redireciona para a página do painel administrativo
-            window.location.href = '/admin-painel.html'; // Ajuste o nome da sua página de painel aqui
-        } else {
-            alert(data.erro || 'Falha no login');
-        }
-    } catch (error) {
-        console.error('Erro de conexão:', error);
-        alert('Erro ao conectar com o servidor');
-    }
-}
+            alert('Login realizado com sucesso!');
 
-// Função de Cadastrar Produto
-async function cadastrarProduto(dadosProduto) {
-    const token = localStorage.getItem('adminToken');
+            // Altera as seções na tela
+            const loginSection = document.getElementById('login-section');
+            const dashboardSection = document.getElementById('dashboard-section');
+            const btnLogout = document.getElementById('btn-logout');
 
-    if (!token) {
-        alert('Sessão expirada ou não autenticada. Faça login novamente.');
-        window.location.href = '/login.html';
-        return;
-    }
+            if (loginSection) loginSection.style.display = 'none';
+            if (dashboardSection) dashboardSection.style.display = 'block';
+            if (btnLogout) btnLogout.style.display = 'inline-block';
 
-    let urlImagemFinal = '/images/placeholder.jpg';
-
-    if (dadosProduto.arquivoImagem) {
-        const formData = new FormData();
-        formData.append('imagemFile', dadosProduto.arquivoImagem);
-
-        try {
-            const uploadRes = await fetch('/api/admin/upload', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: formData
-            });
-
-            const uploadData = await uploadRes.json();
-
-            if (uploadRes.ok && uploadData.url) {
-                urlImagemFinal = uploadData.url;
-            } else {
-                alert('Erro no upload da imagem: ' + (uploadData.erro || uploadData.detalhe || 'Falha no envio'));
-                return;
+            // Chama a função de carregar dados protegidos (se existir)
+            if (typeof carregarDadosPainel === 'function') {
+                carregarDadosPainel();
             }
-        } catch (err) {
-            console.error('Erro de rede no upload:', err);
-            alert('Falha de conexão ao enviar imagem.');
-            return;
-        }
-    } else if (dadosProduto.imagemUrl) {
-        urlImagemFinal = dadosProduto.imagemUrl;
-    }
-
-    const payload = {
-        nome: dadosProduto.nome ? dadosProduto.nome.trim() : '',
-        descricao: dadosProduto.descricao ? dadosProduto.descricao.trim() : '',
-        preco: parseFloat(dadosProduto.preco) || 0,
-        categoria_id: dadosProduto.categoria_id ? parseInt(dadosProduto.categoria_id, 10) : null,
-        destaque: Boolean(dadosProduto.destaque),
-        imagem: urlImagemFinal
-    };
-
-    try {
-        const response = await fetch('/api/admin/produtos', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            alert('Produto cadastrado com sucesso!');
         } else {
-            alert('Erro ao cadastrar produto: ' + (data.erro || data.detalhe || 'Erro desconhecido'));
+            alert(data.erro || data.detalhe || 'Usuário ou senha inválidos.');
         }
     } catch (error) {
-        console.error('Erro de rede ao cadastrar produto:', error);
-        alert('Falha de conexão com o servidor ao cadastrar produto.');
+        console.error('Erro na requisição de login:', error);
+        alert('Erro de conexão ao tentar fazer login. Verifique o console (F12).');
     }
 }
+
+// Execução ao carregar o DOM
+document.addEventListener('DOMContentLoaded', () => {
+    // Escuta submissão do formulário OU clique no botão
+    const formLogin = document.getElementById('form-login');
+    if (formLogin) {
+        formLogin.addEventListener('submit', realizarLogin);
+    }
+
+    const btnEntrar = document.getElementById('btn-entrar');
+    if (btnEntrar) {
+        btnEntrar.addEventListener('click', realizarLogin);
+    }
+
+    // Checagem de token ativo se estiver na página admin
+    if (window.location.pathname.includes('admin')) {
+        const token = localStorage.getItem('adminToken');
+        if (token) {
+            const loginSection = document.getElementById('login-section');
+            const dashboardSection = document.getElementById('dashboard-section');
+            const btnLogout = document.getElementById('btn-logout');
+
+            if (loginSection) loginSection.style.display = 'none';
+            if (dashboardSection) dashboardSection.style.display = 'block';
+            if (btnLogout) btnLogout.style.display = 'inline-block';
+
+            if (typeof carregarDadosPainel === 'function') {
+                carregarDadosPainel();
+            }
+        }
+    }
+});
