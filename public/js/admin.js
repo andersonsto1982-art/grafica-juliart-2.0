@@ -1,87 +1,60 @@
-// Função de Login do Administrador com Logs
-async function realizarLogin(event) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
+// Carregar tabela de produtos dentro do painel do admin
+async function carregarProdutosAdmin() {
+    const tabela = document.getElementById('lista-admin-produtos');
+    if (!tabela) return;
 
-    console.log('Tentando realizar login...');
-
-    const usuarioInput = document.getElementById('usuario')?.value?.trim();
-    const senhaInput = document.getElementById('senha')?.value?.trim();
-
-    if (!usuarioInput || !senhaInput) {
-        alert('Por favor, preencha os campos de usuário e senha.');
-        return;
-    }
+    // Recupera o token guardado no localStorage
+    const token = localStorage.getItem('adminToken');
 
     try {
-        const response = await fetch('/api/admin/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ usuario: usuarioInput, senha: senhaInput })
+        const response = await fetch('/api/produtos', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : ''
+            }
         });
 
-        console.log('Status da resposta:', response.status);
-        const data = await response.json();
-        console.log('Resposta do servidor:', data);
-
-        if (response.ok && data.token) {
-            // Salva o token
-            localStorage.setItem('adminToken', data.token);
-
-            alert('Login realizado com sucesso!');
-
-            // Altera as seções na tela
-            const loginSection = document.getElementById('login-section');
-            const dashboardSection = document.getElementById('dashboard-section');
-            const btnLogout = document.getElementById('btn-logout');
-
-            if (loginSection) loginSection.style.display = 'none';
-            if (dashboardSection) dashboardSection.style.display = 'block';
-            if (btnLogout) btnLogout.style.display = 'inline-block';
-
-            // Chama a função de carregar dados protegidos (se existir)
-            if (typeof carregarDadosPainel === 'function') {
-                carregarDadosPainel();
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                console.warn('Sessão expirada ou não autorizada. Redirecionando...');
+                if (typeof fazerLogout === 'function') fazerLogout();
+                return;
             }
-        } else {
-            alert(data.erro || data.detalhe || 'Usuário ou senha inválidos.');
+            throw new Error(`Erro ao buscar produtos (Status: ${response.status})`);
         }
-    } catch (error) {
-        console.error('Erro na requisição de login:', error);
-        alert('Erro de conexão ao tentar fazer login. Verifique o console (F12).');
+
+        const produtos = await response.json();
+        tabela.innerHTML = '';
+
+        if (!Array.isArray(produtos) || produtos.length === 0) {
+            tabela.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhum produto cadastrado.</td></tr>';
+            return;
+        }
+
+        produtos.forEach(prod => {
+            const tr = document.createElement('tr');
+            const precoFormatado = Number(prod.preco || 0).toLocaleString('pt-BR', { 
+                style: 'currency', 
+                currency: 'BRL' 
+            });
+
+            tr.innerHTML = `
+                <td>${prod.nome || 'Sem nome'}</td>
+                <td>${precoFormatado}</td>
+                <td class="admin-actions">
+                    <button type="button" class="btn-edit" title="Editar" onclick="prepararEdicao(${prod.id})">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button type="button" class="btn-delete" title="Excluir" onclick="deletarProduto(${prod.id})">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tabela.appendChild(tr);
+        });
+    } catch (err) {
+        console.error('Erro ao carregar a lista de produtos no painel:', err);
+        tabela.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red;">Erro ao carregar lista de produtos.</td></tr>';
     }
 }
-
-// Execução ao carregar o DOM
-document.addEventListener('DOMContentLoaded', () => {
-    // Escuta submissão do formulário OU clique no botão
-    const formLogin = document.getElementById('form-login');
-    if (formLogin) {
-        formLogin.addEventListener('submit', realizarLogin);
-    }
-
-    const btnEntrar = document.getElementById('btn-entrar');
-    if (btnEntrar) {
-        btnEntrar.addEventListener('click', realizarLogin);
-    }
-
-    // Checagem de token ativo se estiver na página admin
-    if (window.location.pathname.includes('admin')) {
-        const token = localStorage.getItem('adminToken');
-        if (token) {
-            const loginSection = document.getElementById('login-section');
-            const dashboardSection = document.getElementById('dashboard-section');
-            const btnLogout = document.getElementById('btn-logout');
-
-            if (loginSection) loginSection.style.display = 'none';
-            if (dashboardSection) dashboardSection.style.display = 'block';
-            if (btnLogout) btnLogout.style.display = 'inline-block';
-
-            if (typeof carregarDadosPainel === 'function') {
-                carregarDadosPainel();
-            }
-        }
-    }
-});
