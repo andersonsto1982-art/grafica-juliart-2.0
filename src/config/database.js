@@ -10,7 +10,7 @@ const pool = mysql.createPool({
         rejectUnauthorized: false
     },
     waitForConnections: true,
-    connectionLimit: 5, // Reduzido para evitar estourar o limite de conexões simultâneas do Aiven na Vercel
+    connectionLimit: 5,
     queueLimit: 0
 });
 

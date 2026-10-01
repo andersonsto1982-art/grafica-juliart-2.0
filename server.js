@@ -5,7 +5,6 @@ require('dotenv').config();
 
 const app = express();
 
-// Middlewares obrigatórios para processar JSON e dados do formulário
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -20,12 +19,12 @@ app.use('/api/admin', adminRoutes);
 // Servir ficheiros estáticos da pasta public
 app.use(express.static(path.join(process.cwd(), 'public')));
 
-// Fallback para SPA e páginas
+// Fallback para SPA e páginas HTML
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api/')) {
         return res.status(404).json({ erro: 'Rota de API não encontrada' });
     }
-    
+
     if (req.path === '/admin' || req.path === '/admin.html') {
         return res.sendFile(path.join(process.cwd(), 'public', 'admin.html'));
     }
@@ -39,7 +38,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ erro: 'Erro interno no servidor', detalhe: err.message });
 });
 
-// Inicialização local (desativado na Vercel)
+// Inicialização local
 if (process.env.NODE_ENV !== 'production') {
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/database'); // Ajustado para 'database'
+const pool = require('../config/database');
 const jwt = require('jsonwebtoken');
 
 router.post('/login', async (req, res) => {
@@ -11,7 +11,6 @@ router.post('/login', async (req, res) => {
     }
 
     try {
-        // Consulta na tabela de administradores
         const [rows] = await pool.query(
             'SELECT * FROM gj_administradores WHERE usuario = ?',
             [usuario]
@@ -22,15 +21,12 @@ router.post('/login', async (req, res) => {
         }
 
         const admin = rows[0];
-
-        // Verificação de senha (suporta texto puro ou bcrypt)
         const senhaValida = (senha === admin.senha);
 
         if (!senhaValida) {
             return res.status(401).json({ erro: 'Usuário ou senha inválidos.' });
         }
 
-        // Gera o token JWT
         const secret = process.env.JWT_SECRET || 'secreto_juliart';
         const token = jwt.sign(
             { id: admin.id, usuario: admin.usuario },
