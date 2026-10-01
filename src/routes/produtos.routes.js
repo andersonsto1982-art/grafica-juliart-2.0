@@ -1,80 +1,167 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 
-// 1. Rota de Login do Administrador
-router.post('/login', async (req, res) => {
+// ==========================================
+// ROTAS PÚBLICAS (CONSUMIDAS PELO SITE)
+// ==========================================
+
+// GET /api/produtos - Listar todos os produtos
+router.get('/', async (req, res) => {
     try {
-        const { usuario, senha } = req.body;
-
-        if (!usuario || !senha) {
-            return res.status(400).json({ erro: 'Usuário e senha são obrigatórios' });
-        }
-
-        const [rows] = await pool.query('SELECT * FROM gj_administradores WHERE usuario = ?', [usuario]);
-
-        if (rows.length === 0) {
-            return res.status(401).json({ erro: 'Usuário ou senha incorretos' });
-        }
-
-        const admin = rows[0];
-
-        // Se a senha no banco não for hash (texto puro), altere para: const senhaValida = (senha === admin.senha);
-        const senhaValida = await bcrypt.compare(senha, admin.senha);
-
-        if (!senhaValida) {
-            return res.status(401).json({ erro: 'Usuário ou senha incorretos' });
-        }
-
-        const secret = process.env.JWT_SECRET || 'chave_secreta_padrao';
-        const token = jwt.sign(
-            { id: admin.id, usuario: admin.usuario },
-            secret,
-            { expiresIn: '8h' }
-        );
-
-        res.json({
-            mensagem: 'Login realizado com sucesso',
-            token: token
-        });
-
+        const [produtos] = await pool.query('SELECT * FROM gj_produtos ORDER BY id DESC');
+        return res.json(produtos);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ erro: 'Erro interno no servidor ao realizar login', detalhe: error.message });
+        console.error('Erro ao buscar produtos:', error);
+        return res.status(500).json({ 
+            erro: 'Erro interno ao buscar produtos', 
+            detalhe: error.message 
+        });
     }
 });
 
-// 2. Rota para cadastrar produto (alinhada a /api/admin/produtos)
-router.post('/produtos', async (req, res) => {
+// GET /api/produtos/destaques - Listar apenas produtos em destaque (Carrossel)
+router.get('/destaques', async (req, res) => {
+    try {
+        const [destaques] = await pool.query(
+            'SELECT * FROM gj_produtos WHERE destaque = 1 OR destaque = true ORDER BY id DESC'
+        );
+        return res.json(destaques);
+    } catch (error) {
+        console.error('Erro ao buscar produtos em destaque:', error);
+        return res.status(500).json({ 
+            erro: 'Erro interno ao buscar produtos em destaque', 
+            detalhe: error.message 
+        });
+    }
+});
+
+// GET /api/produtos/:id - Buscar um produto específico por ID
+router.get('/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const [rows] = await pool.query('SELECT * FROM gj_produtos WHERE id = ?', [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ erro: 'Produto não encontrado.' });
+        }
+
+        return res.json(rows[0]);
+    } catch (error) {
+        console.error('Erro ao buscar produto por ID:', error);
+        return res.status(500).json({ 
+            erro: 'Erro interno ao buscar produto', 
+            detalhe: error.message 
+        });
+    }
+});
+
+// ==========================================
+// ROTAS ADMINISTRATIVAS (PAINEL ADMIN)
+// ==========================================
+
+// POST /api/produtos - Cadastrar novo produto
+router.post('/', async (req, res) => {
     try {
         const { nome, descricao, preco, imagem, categoria_id, destaque } = req.body;
 
         if (!nome || !preco) {
-            return res.status(400).json({ erro: 'Nome e preço são obrigatórios' });
+            return res.status(400).json({ erro: 'Nome e preço são obrigatórios.' });
         }
 
         const query = `
             INSERT INTO gj_produtos (nome, descricao, preco, imagem, categoria_id, destaque)
             VALUES (?, ?, ?, ?, ?, ?)
         `;
-        
+
         const [result] = await pool.query(query, [
             nome,
             descricao || null,
-            preco,
+            parseFloat(preco),
             imagem || 'default.jpg',
-            categoria_id || null,
+            categoria_id ? parseInt(categoria_id) : null,
             destaque ? 1 : 0
         ]);
 
-        res.status(201).json({ 
-            mensagem: 'Produto criado com sucesso!', 
-            id: result.insertId 
+        return res.status(201).json({
+            sucesso: true,
+            mensagem: 'Produto cadastrado com sucesso!',
+            id: result.insertId
         });
     } catch (error) {
-        res.status(500).json({ erro: 'Erro ao cadastrar produto', detalhe: error.message });
+        console.error('Erro ao cadastrar produto:', error);
+        return res.status(500).json({ 
+            erro: 'Erro ao cadastrar produto', 
+            detalhe: error.message 
+        });
+    }
+});
+
+// PUT /api/produtos/:id - Atualizar/Editar produto existente
+router.put('/:id', async (req, res) => {
+    const { id } = req.params;
+    const { nome, descricao, preco, imagem, categoria_id, destaque } = req.body;
+
+    if (!nome || !preco) {
+        return res.status(400).json({ erro: 'Nome e preço são obrigatórios.' });
+    }
+
+    try {
+        const query = `
+            UPDATE gj_produtos 
+            SET nome = ?, descricao = ?, preco = ?, imagem = ?, categoria_id = ?, destaque = ?
+            WHERE id = ?
+        `;
+
+        const [result] = await pool.query(query, [
+            nome,
+            descricao || null,
+            parseFloat(preco),
+            imagem || 'default.jpg',
+            categoria_id ? parseInt(categoria_id) : null,
+            destaque ? 1 : 0,
+            id
+        ]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ erro: 'Produto não encontrado para atualização.' });
+        }
+
+        return res.json({
+            sucesso: true,
+            mensagem: 'Produto atualizado com sucesso!'
+        });
+    } catch (error) {
+        console.error('Erro ao atualizar produto:', error);
+        return res.status(500).json({ 
+            erro: 'Erro ao atualizar produto', 
+            detalhe: error.message 
+        });
+    }
+});
+
+// DELETE /api/produtos/:id - Deletar/Excluir produto
+router.delete('/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const [result] = await pool.query('DELETE FROM gj_produtos WHERE id = ?', [id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ erro: 'Produto não encontrado para exclusão.' });
+        }
+
+        return res.json({
+            sucesso: true,
+            mensagem: 'Produto excluído com sucesso!'
+        });
+    } catch (error) {
+        console.error('Erro ao excluir produto:', error);
+        return res.status(500).json({ 
+            erro: 'Erro ao excluir produto', 
+            detalhe: error.message 
+        });
     }
 });
 
