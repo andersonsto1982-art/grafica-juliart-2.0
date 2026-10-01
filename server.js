@@ -1,16 +1,16 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
 
+// Middlewares obrigatórios para processar JSON e dados do formulário
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Rotas de API
+// Rotas da API
 const produtosRoutes = require('./src/routes/produtos.routes');
 const adminRoutes = require('./src/routes/admin.routes');
 
@@ -18,33 +18,19 @@ app.use('/api/produtos', produtosRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Servir ficheiros estáticos da pasta public
-const publicPath = path.join(process.cwd(), 'public');
-if (fs.existsSync(publicPath)) {
-    app.use(express.static(publicPath));
-}
+app.use(express.static(path.join(process.cwd(), 'public')));
 
-// Fallback para rotas do Frontend e páginas HTML
+// Fallback para SPA e páginas
 app.get('*', (req, res) => {
-    // Retorna erro JSON caso seja uma rota /api/ que não existe
     if (req.path.startsWith('/api/')) {
         return res.status(404).json({ erro: 'Rota de API não encontrada' });
     }
-
-    // Se aceder a /admin ou /admin.html
+    
     if (req.path === '/admin' || req.path === '/admin.html') {
-        const adminPath = path.join(process.cwd(), 'public', 'admin.html');
-        if (fs.existsSync(adminPath)) {
-            return res.sendFile(adminPath);
-        }
+        return res.sendFile(path.join(process.cwd(), 'public', 'admin.html'));
     }
 
-    // Página inicial por defeito
-    const indexPath = path.join(process.cwd(), 'public', 'index.html');
-    if (fs.existsSync(indexPath)) {
-        return res.sendFile(indexPath);
-    }
-
-    return res.status(404).send('Página não encontrada.');
+    return res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
 });
 
 // Middleware de Erros Globais
