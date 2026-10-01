@@ -7,24 +7,27 @@ router.post('/login', async (req, res) => {
     const { usuario, senha } = req.body;
 
     if (!usuario || !senha) {
-        return res.status(400).json({ erro: 'Utilizador/E-mail e senha são obrigatórios.' });
+        return res.status(400).json({ erro: 'Utilizador e senha são obrigatórios.' });
     }
 
     try {
+        // Pesquisa apenas pela coluna 'usuario' existente no banco de dados
         const [rows] = await pool.query(
-            'SELECT * FROM gj_administradores WHERE usuario = ? OR email = ?',
-            [usuario, usuario]
+            'SELECT * FROM gj_administradores WHERE usuario = ?',
+            [usuario]
         );
 
         if (rows.length === 0) {
-            return res.status(401).json({ erro: 'Utilizador/E-mail ou senha inválidos.' });
+            return res.status(401).json({ erro: 'Utilizador ou senha inválidos.' });
         }
 
         const admin = rows[0];
+        
+        // Verificação direta da senha
         const senhaValida = (senha === admin.senha);
 
         if (!senhaValida) {
-            return res.status(401).json({ erro: 'Utilizador/E-mail ou senha inválidos.' });
+            return res.status(401).json({ erro: 'Utilizador ou senha inválidos.' });
         }
 
         const secret = process.env.JWT_SECRET || 'secreto_juliart';
