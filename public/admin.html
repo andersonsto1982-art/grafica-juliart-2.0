@@ -16,16 +16,9 @@
         .btn-delete { background: #dc3545; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
         .btn-delete:hover { background: #c82333; }
         .admin-actions { display: flex; gap: 8px; align-items: center; }
-        .btn-edit { background: #ffc107; color: #212529; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-edit:hover { background: #e0a800; }
         .btn-logout { background: #6c757d; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .btn-logout:hover { background: #5a6268; }
         .header-admin { display: flex; justify-content: space-between; align-items: center; }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
-        .modal.active { display: flex; }
-        .modal-content { background-color: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 550px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .close-modal { position: absolute; right: 20px; top: 15px; font-size: 24px; font-weight: bold; cursor: pointer; color: #aaa; }
-        .close-modal:hover { color: #000; }
     </style>
 </head>
 <body>
@@ -33,19 +26,19 @@
         <div class="logo-container header-admin" style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px;">
             <h1 class="logo-text">Painel <span>Administrativo</span></h1>
             <button id="btn-logout" class="btn-logout" onclick="fazerLogout()" style="display: none;">
-                <i class="fa-solid fa-right-from-bracket"></i> Sair do Painel
+                <i class="fa-solid fa-right-from-bracket"></i> Sair
             </button>
         </div>
     </header>
 
     <main class="container">
-        <!-- TELA DE LOGIN -->
+        <!-- FORMULÁRIO DE LOGIN -->
         <div id="login-section" class="admin-container">
             <h2><i class="fa-solid fa-lock"></i> Acesso Restrito</h2>
             <form id="form-login">
                 <div class="form-group">
-                    <label for="usuario">Usuário:</label>
-                    <input type="text" id="usuario" name="usuario" placeholder="Digite seu usuário" required />
+                    <label for="usuario">Utilizador / E-mail:</label>
+                    <input type="text" id="usuario" name="usuario" placeholder="Digite seu utilizador ou e-mail" required />
                 </div>
                 <div class="form-group">
                     <label for="senha">Senha:</label>
@@ -55,45 +48,9 @@
             </form>
         </div>
 
-        <!-- PAINEL DE CADASTRO (EXIBIDO APÓS O LOGIN) -->
+        <!-- PAINEL ADMINISTRATIVO -->
         <div id="dashboard-section" class="admin-container" style="display: none;">
-            <h2><i class="fa-solid fa-box-open"></i> Cadastrar Novo Item</h2>
-            <form id="form-produto">
-                <div class="form-group">
-                    <label>Nome do Produto:</label>
-                    <input type="text" id="prod-nome" name="nome" required placeholder="Ex: Caneca Porcelana Personalizada">
-                </div>
-                <div class="form-group">
-                    <label>Preço (R$):</label>
-                    <input type="number" step="0.01" id="prod-preco" name="preco" required placeholder="29.90">
-                </div>
-                <div class="form-group">
-                    <label>Categoria:</label>
-                    <select id="prod-categoria" name="categoria_id" required>
-                        <option value="1">Canecas</option>
-                        <option value="2">Camisas</option>
-                        <option value="3">Papelaria / Cartões</option>
-                        <option value="4">Gráfica Rápida</option>
-                        <option value="5">Personalizados para Eventos</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Descrição / Especificações:</label>
-                    <textarea id="prod-descricao" name="descricao" rows="3" placeholder="Ex: Porcelana 325ml, resistente ao micro-ondas"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="input-imagem-arquivo">Imagem do Produto (Arquivo):</label>
-                    <input type="file" id="input-imagem-arquivo" accept="image/*">
-                </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="prod-destaque" name="destaque" value="true"> Destacar no Carrossel Principal
-                    </label>
-                </div>
-                <button type="submit" class="btn-pink" style="width: 100%;">Salvar Produto</button>
-            </form>
-
-            <h2 style="margin-top: 40px;"><i class="fa-solid fa-list"></i> Produtos Cadastrados</h2>
+            <h2><i class="fa-solid fa-list"></i> Produtos Cadastrados</h2>
             <table class="admin-table">
                 <thead>
                     <tr>
@@ -103,54 +60,12 @@
                     </tr>
                 </thead>
                 <tbody id="lista-admin-produtos">
-                    <!-- Preenchido via JS -->
+                    <!-- Preenchido via JavaScript -->
                 </tbody>
             </table>
         </div>
     </main>
 
-    <!-- MODAL DE EDIÇÃO DE PRODUTO -->
-    <div id="modal-editar-produto" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="toggleModal('modal-editar-produto')">&times;</span>
-            <h2><i class="fa-solid fa-pen-to-square"></i> Editar Produto</h2>
-            <form id="form-editar-produto">
-                <input type="hidden" id="edit-prod-id">
-                <input type="hidden" id="edit-prod-imagem-url">
-                <div class="form-group">
-                    <label for="edit-prod-nome">Nome do Produto:</label>
-                    <input type="text" id="edit-prod-nome" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit-prod-preco">Preço (R$):</label>
-                    <input type="number" step="0.01" id="edit-prod-preco" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit-prod-categoria">Categoria:</label>
-                    <select id="edit-prod-categoria" required>
-                        <option value="1">Canecas</option>
-                        <option value="2">Camisas</option>
-                        <option value="3">Papelaria / Cartões</option>
-                        <option value="4">Gráfica Rápida</option>
-                        <option value="5">Personalizados para Eventos</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="edit-prod-descricao">Descrição:</label>
-                    <textarea id="edit-prod-descricao" rows="3"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="edit-prod-imagem-file">Trocar Imagem (Opcional):</label>
-                    <input type="file" id="edit-prod-imagem-file" accept="image/*">
-                </div>
-                <button type="submit" class="btn-pink" style="width: 100%; margin-top: 15px;">
-                    <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Script único da aplicação -->
     <script src="js/script.js"></script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
+const authMiddleware = require('../middleware/auth');
 
 // GET /api/produtos
 router.get('/', async (req, res) => {
@@ -51,7 +52,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/produtos
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
     try {
         const { nome, descricao, preco, imagem, categoria_id, destaque } = req.body;
         if (!nome || !preco) {
@@ -87,7 +88,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/produtos/:id
-router.put('/:id', async (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
     const { nome, descricao, preco, imagem, categoria_id, destaque } = req.body;
 
@@ -130,7 +131,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/produtos/:id
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
     try {
         const [result] = await pool.query('DELETE FROM gj_produtos WHERE id = ?', [id]);

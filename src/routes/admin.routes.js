@@ -7,24 +7,24 @@ router.post('/login', async (req, res) => {
     const { usuario, senha } = req.body;
 
     if (!usuario || !senha) {
-        return res.status(400).json({ erro: 'Usuário e senha são obrigatórios.' });
+        return res.status(400).json({ erro: 'Utilizador/E-mail e senha são obrigatórios.' });
     }
 
     try {
         const [rows] = await pool.query(
-            'SELECT * FROM gj_administradores WHERE usuario = ?',
-            [usuario]
+            'SELECT * FROM gj_administradores WHERE usuario = ? OR email = ?',
+            [usuario, usuario]
         );
 
         if (rows.length === 0) {
-            return res.status(401).json({ erro: 'Usuário ou senha inválidos.' });
+            return res.status(401).json({ erro: 'Utilizador/E-mail ou senha inválidos.' });
         }
 
         const admin = rows[0];
         const senhaValida = (senha === admin.senha);
 
         if (!senhaValida) {
-            return res.status(401).json({ erro: 'Usuário ou senha inválidos.' });
+            return res.status(401).json({ erro: 'Utilizador/E-mail ou senha inválidos.' });
         }
 
         const secret = process.env.JWT_SECRET || 'secreto_juliart';
@@ -43,8 +43,7 @@ router.post('/login', async (req, res) => {
         console.error('Erro na rota de login:', error);
         return res.status(500).json({
             erro: 'Erro interno no servidor ao realizar login',
-            detalhe: error.message,
-            codigo: error.code || 'SEM_CODIGO'
+            detalhe: error.message
         });
     }
 });
