@@ -1,238 +1,64 @@
-const NUMERO_WHATSAPP = '558191427836';
-let carrinho = [];
-
-function toggleModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.toggle('active');
-    }
-}
-
-function obterUrlImagem(imagem) {
-    if (!imagem) return '/images/placeholder.jpg';
-    if (imagem.startsWith('http://') || imagem.startsWith('https://')) {
-        return imagem;
-    }
-    return imagem.startsWith('/') ? imagem : `/${imagem}`;
-}
-
-function atualizarCarrinhoUI() {
-    const badge = document.getElementById('carrinho-qtd-badge');
-    const lista = document.getElementById('carrinho-lista-itens');
-    const totalElemento = document.getElementById('carrinho-valor-total');
-
-    if (badge) badge.textContent = carrinho.length;
-    if (!lista || !totalElemento) return;
-
-    lista.innerHTML = '';
-    let valorTotal = 0;
-
-    if (carrinho.length === 0) {
-        lista.innerHTML = '<li class="carrinho-vazio-msg">Seu carrinho está vazio!</li>';
-    } else {
-        carrinho.forEach((item, index) => {
-            valorTotal += Number(item.preco);
-            const precoFormatado = Number(item.preco).toLocaleString('pt-BR', {
-                style: 'currency',
-                currency: 'BRL'
-            });
-
-            const li = document.createElement('li');
-            li.classList.add('carrinho-item');
-            li.innerHTML = `
-                <div class="carrinho-item-info">
-                    <span class="carrinho-item-nome">${item.nome}</span>
-                    <span class="carrinho-item-preco">${precoFormatado}</span>
-                </div>
-                <button class="btn-remover-item" onclick="removerDoCarrinho(${index})" title="Remover item">
-                    <i class="fa-solid fa-trash-can"></i>
-                </button>
-            `;
-            lista.appendChild(li);
-        });
-    }
-
-    totalElemento.textContent = valorTotal.toLocaleString('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-    });
-}
-
-function mostrarToast(mensagem) {
-    let container = document.getElementById('toast-container');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'toast-container';
-        document.body.appendChild(container);
-    }
-    const toast = document.createElement('div');
-    toast.classList.add('toast-notification');
-    toast.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${mensagem}`;
-    container.appendChild(toast);
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
-}
-
-function adicionarAoCarrinho(produto) {
-    carrinho.push(produto);
-    atualizarCarrinhoUI();
-    mostrarToast(`"${produto.nome}" foi adicionado ao carrinho!`);
-}
-
-function removerDoCarrinho(index) {
-    carrinho.splice(index, 1);
-    atualizarCarrinhoUI();
-}
-
-function limparCarrinho() {
-    if (carrinho.length === 0) return;
-    if (confirm('Deseja realmente limpar todos os itens do carrinho?')) {
-        carrinho = [];
-        atualizarCarrinhoUI();
-    }
-}
-
-function finalizarPedidoWhatsApp() {
-    if (carrinho.length === 0) {
-        alert('Seu carrinho está vazio! Adicione alguns produtos antes de finalizar.');
-        return;
-    }
-
-    let mensagem = '*Olá, Gráfica Juliart! Gostaria de fazer o seguinte pedido:*\n\n';
-    let total = 0;
-
-    carrinho.forEach((item, index) => {
-        mensagem += `${index + 1}. *${item.nome}* - R$ ${Number(item.preco).toFixed(2)}\n`;
-        total += Number(item.preco);
-    });
-
-    mensagem += `\n*Total Estimado:* R$ ${total.toFixed(2)}`;
-    mensagem += '\n\n*Aguardo orientações para envio da arte e chave PIX/pagamento.*';
-
-    const url = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
-    toggleModal('modal-carrinho');
-    window.open(url, '_blank');
-}
-
-async function carregarProdutosAdmin() {
-    const tabela = document.getElementById('lista-admin-produtos');
-    if (!tabela) return;
-
-    const token = localStorage.getItem('adminToken');
+// Carregar categorias no select do painel admin
+async function carregarCategoriasSelect() {
+    const select = document.getElementById('categoria-produto');
+    if (!select) return;
 
     try {
-        const response = await fetch('/api/produtos', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': token ? `Bearer ${token}` : ''
-            }
-        });
+        const response = await fetch('/api/categorias');
+        if (!response.ok) return;
 
-        if (!response.ok) {
-            if (response.status === 401 || response.status === 403) {
-                fazerLogout();
-                return;
-            }
-            throw new Error(`Erro HTTP! Status: ${response.status}`);
-        }
+        const categorias = await response.json();
+        select.innerHTML = '<option value="">Selecione uma categoria...</option>';
 
-        const produtos = await response.json();
-        tabela.innerHTML = '';
-
-        if (!Array.isArray(produtos) || produtos.length === 0) {
-            tabela.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhum produto cadastrado.</td></tr>';
-            return;
-        }
-
-        produtos.forEach(prod => {
-            const tr = document.createElement('tr');
-            const precoNumero = typeof prod.preco === 'string' 
-                ? parseFloat(prod.preco.replace(',', '.')) 
-                : prod.preco;
-
-            const precoFormatado = Number(precoNumero || 0).toLocaleString('pt-BR', {
-                style: 'currency',
-                currency: 'BRL'
-            });
-
-            tr.innerHTML = `
-                <td>${prod.nome || 'Sem nome'}</td>
-                <td>${precoFormatado}</td>
-                <td class="admin-actions">
-                    <button type="button" class="btn-delete" title="Excluir" onclick="deletarProduto(${prod.id})">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </td>
-            `;
-            tabela.appendChild(tr);
+        categorias.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat.id;
+            opt.textContent = cat.nome;
+            select.appendChild(opt);
         });
     } catch (err) {
-        console.error('Erro ao carregar lista no painel:', err);
-        tabela.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#e74c3c;">Erro ao carregar produtos do servidor.</td></tr>';
+        console.error('Erro ao carregar categorias:', err);
     }
 }
 
-async function realizarLogin(event) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
+// Cadastrar nova categoria via Admin
+async function cadastrarCategoria(event) {
+    event.preventDefault();
 
-    const btnEntrar = document.getElementById('btn-entrar');
-    const usuarioInput = document.getElementById('usuario')?.value.trim();
-    const senhaInput = document.getElementById('senha')?.value.trim();
+    const token = localStorage.getItem('adminToken');
+    const nome = document.getElementById('nome-categoria')?.value.trim();
 
-    if (!usuarioInput || !senhaInput) {
-        alert('Por favor, preencha o utilizador/e-mail e a senha.');
+    if (!nome) {
+        alert('Digite o nome da categoria.');
         return;
     }
 
-    if (btnEntrar) {
-        btnEntrar.disabled = true;
-        btnEntrar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A verificar...';
-    }
-
     try {
-        const response = await fetch('/api/admin/login', {
+        const response = await fetch('/api/categorias', {
             method: 'POST',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ usuario: usuarioInput, senha: senhaInput })
+            body: JSON.stringify({ nome })
         });
 
         const data = await response.json();
 
-        if (response.ok && data.token) {
-            localStorage.setItem('adminToken', data.token);
-
-            const loginSection = document.getElementById('login-section');
-            const dashboardSection = document.getElementById('dashboard-section');
-            const btnLogout = document.getElementById('btn-logout');
-
-            if (loginSection) loginSection.style.display = 'none';
-            if (dashboardSection) dashboardSection.style.display = 'block';
-            if (btnLogout) btnLogout.style.display = 'inline-block';
-
-            carregarProdutosAdmin();
-            alert('Login efetuado com sucesso!');
+        if (response.ok) {
+            alert('Categoria cadastrada com sucesso!');
+            document.getElementById('form-cadastrar-categoria')?.reset();
+            carregarCategoriasSelect();
         } else {
-            alert(data.erro || data.detalhe || 'Utilizador ou senha inválidos.');
+            alert(data.erro || 'Erro ao cadastrar categoria.');
         }
-    } catch (error) {
-        console.error('Erro no login:', error);
-        alert('Erro ao conectar com a API de login. Verifique sua conexão.');
-    } finally {
-        if (btnEntrar) {
-            btnEntrar.disabled = false;
-            btnEntrar.innerHTML = 'Entrar';
-        }
+    } catch (err) {
+        console.error('Erro ao cadastrar categoria:', err);
+        alert('Erro de conexão com o servidor.');
     }
 }
 
+// Cadastrar produto com Categoria associada
 async function cadastrarProduto(event) {
     event.preventDefault();
 
@@ -245,6 +71,7 @@ async function cadastrarProduto(event) {
 
     const nome = document.getElementById('nome-produto')?.value.trim();
     const preco = document.getElementById('preco-produto')?.value;
+    const categoria_id = document.getElementById('categoria-produto')?.value;
     const imagem = document.getElementById('imagem-produto')?.value.trim();
     const descricao = document.getElementById('descricao-produto')?.value.trim();
     const destaque = document.getElementById('destaque-produto')?.checked || false;
@@ -267,6 +94,7 @@ async function cadastrarProduto(event) {
             body: JSON.stringify({
                 nome,
                 preco,
+                categoria_id: categoria_id || null,
                 imagem: imagem || 'default.jpg',
                 descricao,
                 destaque
@@ -290,62 +118,31 @@ async function cadastrarProduto(event) {
     }
 }
 
-function fazerLogout() {
-    localStorage.removeItem('adminToken');
-    window.location.reload();
-}
-
-async function deletarProduto(id) {
-    if (!confirm('Deseja realmente apagar este produto?')) return;
-
-    const token = localStorage.getItem('adminToken');
-    try {
-        const response = await fetch(`/api/produtos/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': token ? `Bearer ${token}` : ''
-            }
-        });
-
-        const data = await response.json();
-        if (response.ok) {
-            alert('Produto apagado com sucesso!');
-            carregarProdutosAdmin();
-        } else {
-            alert(data.erro || 'Não foi possível apagar o produto.');
-        }
-    } catch (err) {
-        console.error('Erro ao eliminar produto:', err);
-        alert('Erro de comunicação com o servidor.');
-    }
-}
-
-// Evento Único de Carregamento do DOM
+// Atualize o listener DOMContentLoaded no final de script.js
 document.addEventListener('DOMContentLoaded', () => {
-    // Escuta o formulário de login
     const formLogin = document.getElementById('form-login');
     if (formLogin) {
         formLogin.addEventListener('submit', realizarLogin);
     }
 
-    // Escuta o formulário de cadastro de produtos
-    const formCadastrar = document.getElementById('form-cadastrar-produto');
-    if (formCadastrar) {
-        formCadastrar.addEventListener('submit', cadastrarProduto);
+    const formCadastrarProd = document.getElementById('form-cadastrar-produto');
+    if (formCadastrarProd) {
+        formCadastrarProd.addEventListener('submit', cadastrarProduto);
     }
 
-    // Verifica sessão administrativa se estiver na página admin
+    const formCadastrarCat = document.getElementById('form-cadastrar-categoria');
+    if (formCadastrarCat) {
+        formCadastrarCat.addEventListener('submit', cadastrarCategoria);
+    }
+
     if (window.location.pathname.includes('admin')) {
         const token = localStorage.getItem('adminToken');
         if (token) {
-            const loginSection = document.getElementById('login-section');
-            const dashboardSection = document.getElementById('dashboard-section');
-            const btnLogout = document.getElementById('btn-logout');
+            document.getElementById('login-section')?.setAttribute('style', 'display: none !important');
+            document.getElementById('dashboard-section')?.setAttribute('style', 'display: block !important');
+            document.getElementById('btn-logout')?.setAttribute('style', 'display: inline-block !important');
 
-            if (loginSection) loginSection.style.display = 'none';
-            if (dashboardSection) dashboardSection.style.display = 'block';
-            if (btnLogout) btnLogout.style.display = 'inline-block';
-
+            carregarCategoriasSelect();
             carregarProdutosAdmin();
         }
     }

@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .admin-container { max-width: 800px; margin: 40px auto; padding: 25px; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .admin-container { max-width: 900px; margin: 40px auto; padding: 25px; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .form-group { margin-bottom: 15px; text-align: left; }
         .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
@@ -56,13 +56,31 @@
         <!-- PAINEL DE CONTROLO / DASHBOARD -->
         <div id="dashboard-section" class="admin-container" style="display: none;">
             
+            <!-- SEÇÃO DE GESTÃO DE CATEGORIAS -->
+            <h2><i class="fa-solid fa-tags"></i> Gerir Categorias</h2>
+            <form id="form-cadastrar-categoria" style="margin-bottom: 20px;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nome-categoria">Nome da Categoria *</label>
+                        <input type="text" id="nome-categoria" placeholder="Ex: Cartões de Visita, Banners..." required />
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <button type="submit" id="btn-salvar-categoria" class="btn-pink" style="padding: 10px 20px; cursor: pointer; width: 100%;">
+                            <i class="fa-solid fa-plus"></i> Adicionar Categoria
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <hr class="section-divider">
+
             <!-- FORMULÁRIO PARA CADASTRAR PRODUTO -->
             <h2><i class="fa-solid fa-plus-circle"></i> Cadastrar Novo Produto</h2>
             <form id="form-cadastrar-produto" style="margin-bottom: 25px;">
                 <div class="form-row">
                     <div class="form-group">
                         <label for="nome-produto">Nome do Produto *</label>
-                        <input type="text" id="nome-produto" placeholder="Ex: Cartão de Visita" required />
+                        <input type="text" id="nome-produto" placeholder="Ex: Cartão de Visita 250g" required />
                     </div>
                     <div class="form-group">
                         <label for="preco-produto">Preço (R$) *</label>
@@ -70,9 +88,17 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="imagem-produto">Caminho / URL da Imagem</label>
-                    <input type="text" id="imagem-produto" placeholder="Ex: /images/cartao.jpg ou https://..." />
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="categoria-produto">Categoria</label>
+                        <select id="categoria-produto">
+                            <option value="">Selecione uma categoria...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="imagem-produto">Caminho / URL da Imagem</label>
+                        <input type="text" id="imagem-produto" placeholder="Ex: /images/cartao.jpg" />
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -99,6 +125,7 @@
                     <tr>
                         <th>Nome</th>
                         <th>Preço</th>
+                        <th>Categoria</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -109,6 +136,6 @@
         </div>
     </main>
 
-    <script src="js/admin.js"></script>
+    <script src="js/script.js"></script>
 </body>
 </html>
