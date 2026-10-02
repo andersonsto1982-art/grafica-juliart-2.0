@@ -233,6 +233,63 @@ async function realizarLogin(event) {
     }
 }
 
+async function cadastrarProduto(event) {
+    event.preventDefault();
+
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+        alert('Sessão expirada. Faça login novamente.');
+        fazerLogout();
+        return;
+    }
+
+    const nome = document.getElementById('nome-produto')?.value.trim();
+    const preco = document.getElementById('preco-produto')?.value;
+    const imagem = document.getElementById('imagem-produto')?.value.trim();
+    const descricao = document.getElementById('descricao-produto')?.value.trim();
+    const destaque = document.getElementById('destaque-produto')?.checked || false;
+
+    if (!nome || !preco) {
+        alert('Por favor, preencha o nome e o preço do produto.');
+        return;
+    }
+
+    const btnSalvar = document.getElementById('btn-salvar-produto');
+    if (btnSalvar) btnSalvar.disabled = true;
+
+    try {
+        const response = await fetch('/api/produtos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                nome,
+                preco,
+                imagem: imagem || 'default.jpg',
+                descricao,
+                destaque
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert('Produto cadastrado com sucesso!');
+            document.getElementById('form-cadastrar-produto')?.reset();
+            carregarProdutosAdmin();
+        } else {
+            alert(data.erro || 'Erro ao cadastrar produto.');
+        }
+    } catch (error) {
+        console.error('Erro na requisição de cadastro:', error);
+        alert('Erro ao conectar com o servidor.');
+    } finally {
+        if (btnSalvar) btnSalvar.disabled = false;
+    }
+}
+
 function fazerLogout() {
     localStorage.removeItem('adminToken');
     window.location.reload();
@@ -263,12 +320,21 @@ async function deletarProduto(id) {
     }
 }
 
+// Evento Único de Carregamento do DOM
 document.addEventListener('DOMContentLoaded', () => {
+    // Escuta o formulário de login
     const formLogin = document.getElementById('form-login');
     if (formLogin) {
         formLogin.addEventListener('submit', realizarLogin);
     }
 
+    // Escuta o formulário de cadastro de produtos
+    const formCadastrar = document.getElementById('form-cadastrar-produto');
+    if (formCadastrar) {
+        formCadastrar.addEventListener('submit', cadastrarProduto);
+    }
+
+    // Verifica sessão administrativa se estiver na página admin
     if (window.location.pathname.includes('admin')) {
         const token = localStorage.getItem('adminToken');
         if (token) {
@@ -284,5 +350,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    atualizarCarrinhoUI();
+    atualizarCarrinhoUI();   
 });
