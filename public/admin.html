@@ -11,6 +11,10 @@
         .form-group { margin-bottom: 15px; text-align: left; }
         .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        .form-row { display: flex; gap: 15px; }
+        .form-row .form-group { flex: 1; }
+        .checkbox-group { display: flex; align-items: center; gap: 8px; margin-bottom: 15px; }
+        .checkbox-group input { width: auto; cursor: pointer; }
         .admin-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .admin-table th, .admin-table td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
         .btn-delete { background: #dc3545; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
@@ -19,6 +23,7 @@
         .btn-logout { background: #6c757d; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .btn-logout:hover { background: #5a6268; }
         .header-admin { display: flex; justify-content: space-between; align-items: center; }
+        .section-divider { border: 0; height: 1px; background: #eee; margin: 30px 0; }
     </style>
 </head>
 <body>
@@ -48,7 +53,46 @@
             </form>
         </div>
 
+        <!-- PAINEL DE CONTROLO / DASHBOARD -->
         <div id="dashboard-section" class="admin-container" style="display: none;">
+            
+            <!-- FORMULÁRIO PARA CADASTRAR PRODUTO -->
+            <h2><i class="fa-solid fa-plus-circle"></i> Cadastrar Novo Produto</h2>
+            <form id="form-cadastrar-produto" style="margin-bottom: 25px;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nome-produto">Nome do Produto *</label>
+                        <input type="text" id="nome-produto" placeholder="Ex: Cartão de Visita" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="preco-produto">Preço (R$) *</label>
+                        <input type="number" id="preco-produto" step="0.01" placeholder="Ex: 49.90" required />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="imagem-produto">Caminho / URL da Imagem</label>
+                    <input type="text" id="imagem-produto" placeholder="Ex: /images/cartao.jpg ou https://..." />
+                </div>
+
+                <div class="form-group">
+                    <label for="descricao-produto">Descrição</label>
+                    <textarea id="descricao-produto" rows="3" placeholder="Detalhes sobre o produto..."></textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="destaque-produto" />
+                    <label for="destaque-produto">Destacar na página inicial?</label>
+                </div>
+
+                <button type="submit" id="btn-salvar-produto" class="btn-pink" style="padding: 10px 20px; cursor: pointer;">
+                    <i class="fa-solid fa-floppy-disk"></i> Cadastrar Produto
+                </button>
+            </form>
+
+            <hr class="section-divider">
+
+            <!-- LISTAGEM DE PRODUTOS CADASTRADOS -->
             <h2><i class="fa-solid fa-list"></i> Produtos Cadastrados</h2>
             <table class="admin-table">
                 <thead>
